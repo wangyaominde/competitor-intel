@@ -127,24 +127,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 主干持续构建：覆盖更新 Pre-release「latest」，方便下载
-      - name: Update continuous pre-release (latest)
+      # 主干持续构建：直接发布/覆盖正式 Release「latest」
+      - name: Publish latest Release
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: Latest build (main)
+          name: Latest
           body: |
-            自动构建自 `main`（${{ github.sha }}）。
+            自动构建自 `main`（`${{ github.sha }}`）。
 
-            - 每次推送到 main 会**覆盖更新**此 Pre-release
-            - 正式版本请打 tag：`git tag v1.0.0 && git push origin v1.0.0`
-            - macOS：`.dmg` / `.zip`（未公证，需在系统设置里允许）
+            - 每次推送到 main 会覆盖更新本 Release
+            - 也可打版本 tag：`git tag v1.0.0 && git push origin v1.0.0`
+            - macOS：`.dmg` / `.zip`（未公证，系统设置 → 仍要打开）
             - Windows：安装包 / portable `.exe`
           files: release-assets/*
           draft: false
-          prerelease: true
-          make_latest: false
+          prerelease: false
+          make_latest: true
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

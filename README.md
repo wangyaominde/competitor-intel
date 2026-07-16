@@ -94,8 +94,8 @@ npm run test:e2e
 
 | 触发 | 结果 |
 |------|------|
-| 推送到 `main` | 自动打包，更新 Pre-release **[Latest build](https://github.com/wangyaominde/competitor-intel/releases/tag/latest)** |
-| `git tag v1.x.x && git push --tags` | 正式 **Release**（带版本号） |
+| 推送到 `main` | 自动打包并发布 **[Latest](https://github.com/wangyaominde/competitor-intel/releases/tag/latest)**（正式 Release，非 pre-release） |
+| `git tag v1.x.x && git push --tags` | 带版本号的 **Release** |
 | Actions 手动 Run | 同上（按当前分支/tag） |
 
 ```bash
