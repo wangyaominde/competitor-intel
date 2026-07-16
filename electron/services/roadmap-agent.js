@@ -15,10 +15,10 @@ class RoadmapAgent {
     const products = input.products || [];
     const competitors = input.competitors || [];
     if (!products.length) {
-      throw new Error('请先配置至少一个己方产品');
+      throw new Error('请先配置至少一个己方产品 · Configure at least one product first');
     }
     if (!competitors.length) {
-      throw new Error('竞品库为空，请先扫描或添加竞品再生成路线图');
+      throw new Error('竞品库为空 · Library empty — scan or add competitors before generating roadmap');
     }
 
     const focus =
