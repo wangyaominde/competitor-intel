@@ -3,74 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Competitor Scout · 竞品情报 — same UI as the desktop app (browser demo, no real LLM)" />
+  <meta name="description" content="Competitor Scout — browser demo (same UI as desktop, no real LLM)" />
   <meta name="theme-color" content="#0b0d13" />
-  <title>Demo · 竞品情报 · Competitor Scout</title>
+  <title>Demo · Competitor Scout</title>
   <base href="/competitor-scout/" />
-  <!-- Same styles as Electron · 与 Electron 版同一份样式 -->
   <link rel="stylesheet" href="/competitor-scout/styles/app.css" />
   <link rel="stylesheet" href="/competitor-scout/styles/demo-overlay.css" />
   <link rel="icon" type="image/png" href="/competitor-scout/favicon.png" />
   <link rel="apple-touch-icon" href="/competitor-scout/icon-192.png" />
+  <script>
+    (function () {
+      try {
+        var lang = localStorage.getItem('cs_lang');
+        if (lang === 'en') document.documentElement.lang = 'en';
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="demo-web">
   <div class="demo-ribbon">
     <div>
       <span class="pill">DEMO</span>
-      <strong style="margin-left:8px">与桌面端同款界面 · Same UI as desktop</strong>
-      <span> · 示例数据 · Sample data · 无真实大模型 · No real LLM</span>
+      <strong class="demo-ribbon-title" style="margin-left:8px">Same UI as desktop</strong>
+      <span class="demo-ribbon-sub"> · Sample data · No real LLM</span>
     </div>
     <div>
       <a href="https://github.com/wangyaominde/competitor-scout" target="_blank" rel="noopener">GitHub</a>
       ·
-      <a href="https://github.com/wangyaominde/competitor-scout/releases/tag/latest" target="_blank" rel="noopener">下载桌面版 · Download desktop</a>
+      <a href="https://github.com/wangyaominde/competitor-scout/releases/tag/latest" target="_blank" rel="noopener">Download desktop</a>
     </div>
   </div>
-
-  <!-- Structure matches src/index.html · 以下结构与 src/index.html 一致 -->
-  <div id="boot" class="boot">
+<div id="boot" class="boot">
     <div class="boot-card">
-      <div class="brand-mark lg has-icon"></div>
-      <div class="boot-title">竞品情报 · Competitor Scout</div>
-      <div class="boot-sub">正在加载工作区… Loading workspace…</div>
+      <div class="brand-mark lg has-icon">竞</div>
+      <div class="boot-title">竞品情报</div>
+      <div class="boot-sub">正在加载工作区…</div>
       <div class="boot-bar"><i></i></div>
     </div>
   </div>
 
   <div id="app" class="hidden">
+    <!-- macOS 顶栏拖拽区：红绿灯下方不放可点 UI，避免挡住系统窗口菜单 -->
     <div class="titlebar-drag" aria-hidden="true"></div>
 
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark has-icon"></div>
+        <div class="brand-mark has-icon">竞</div>
         <div class="brand-text">
           <strong>竞品情报</strong>
           <span>Competitor Scout</span>
         </div>
       </div>
 
-      <div class="ready-mini" id="ready-mini" title="配置就绪度 · Readiness">
+      <div class="ready-mini" id="ready-mini" data-i18n-title-zh="配置就绪度" data-i18n-title-en="Readiness" title="配置就绪度">
         <div class="ready-mini-top">
-          <span>就绪度 · Ready</span>
+          <span data-i18n-zh="就绪度" data-i18n-en="Ready">就绪度</span>
           <strong id="ready-mini-pct">0%</strong>
         </div>
         <div class="ready-track"><i id="ready-mini-bar"></i></div>
       </div>
 
       <nav class="nav" id="nav">
-        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> 仪表盘 · Dashboard</button>
-        <button class="nav-item" data-page="competitors"><span class="nav-icon">◎</span> 竞品库 · Competitors</button>
-        <button class="nav-item" data-page="scan"><span class="nav-icon">⟳</span> 智能扫描 · Scan</button>
-        <button class="nav-item" data-page="product"><span class="nav-icon">◇</span> 我的产品 · Products</button>
-        <button class="nav-item" data-page="roadmap"><span class="nav-icon">⇢</span> 击败路径 · Roadmap</button>
-        <button class="nav-item" data-page="loop"><span class="nav-icon">◷</span> Loop 引擎 · Loop</button>
-        <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> 设置 · Settings</button>
+        <button class="nav-item active" data-page="dashboard" data-i18n-zh="仪表盘" data-i18n-en="Dashboard"><span class="nav-icon">◈</span> 仪表盘</button>
+        <button class="nav-item" data-page="competitors" data-i18n-zh="竞品库" data-i18n-en="Competitors"><span class="nav-icon">◎</span> 竞品库</button>
+        <button class="nav-item" data-page="scan" data-i18n-zh="智能扫描" data-i18n-en="Smart Scan"><span class="nav-icon">⟳</span> 智能扫描</button>
+        <button class="nav-item" data-page="product" data-i18n-zh="我的产品" data-i18n-en="My Products"><span class="nav-icon">◇</span> 我的产品</button>
+        <button class="nav-item" data-page="roadmap" data-i18n-zh="击败路径" data-i18n-en="Beat Roadmap"><span class="nav-icon">⇢</span> 击败路径</button>
+        <button class="nav-item" data-page="loop" data-i18n-zh="Loop 引擎" data-i18n-en="Loop Engine"><span class="nav-icon">◷</span> Loop 引擎</button>
+        <button class="nav-item" data-page="settings" data-i18n-zh="设置" data-i18n-en="Settings"><span class="nav-icon">⚙</span> 设置</button>
       </nav>
 
       <div class="sidebar-footer">
+        <div class="lang-switch" title="Language">
+          <button type="button" class="lang-btn active" data-lang="zh">中文</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
         <div class="loop-pill" id="loop-pill">
           <span class="dot"></span>
-          <span id="loop-pill-text">Loop 未启动 · Off</span>
+          <span id="loop-pill-text">Loop 未启动</span>
         </div>
       </div>
     </aside>
@@ -78,15 +88,15 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h1 id="page-title">仪表盘 · Dashboard</h1>
-          <p class="subtitle" id="page-sub">威胁态势与待确认竞品 · Threat overview & pending review</p>
+          <h1 id="page-title">仪表盘</h1>
+          <p class="subtitle" id="page-sub">威胁态势与待确认竞品</p>
         </div>
         <div class="topbar-actions">
-          <button class="btn ghost" id="btn-notify-toggle" title="通知 · Notifications">
+          <button class="btn ghost" id="btn-notify-toggle" data-i18n-title-zh="通知" data-i18n-title-en="Notifications" title="通知">
             🔔 <span id="notify-badge" class="badge hidden">0</span>
           </button>
-          <button class="btn" id="btn-export" title="导出 · Export">导出 · Export</button>
-          <button class="btn primary" id="btn-quick-scan">立即扫描 · Scan</button>
+          <button class="btn" id="btn-export" data-i18n-zh="导出" data-i18n-en="Export" data-i18n-title-zh="导出" data-i18n-title-en="Export" title="导出">导出</button>
+          <button class="btn primary" id="btn-quick-scan" data-i18n-zh="立即扫描" data-i18n-en="Scan now">立即扫描</button>
         </div>
       </header>
 
@@ -97,11 +107,11 @@
 
     <div id="notify-drawer" class="drawer hidden">
       <div class="drawer-head">
-        <h3>通知 · Notifications</h3>
+        <h3 data-i18n-zh="通知" data-i18n-en="Notifications">通知</h3>
         <button class="btn icon" id="btn-notify-close">✕</button>
       </div>
       <div class="drawer-body" id="notify-list">
-        <p class="muted empty-hint">暂无通知 · No notifications</p>
+        <p class="muted empty-hint">暂无通知</p>
       </div>
     </div>
 
@@ -110,6 +120,7 @@
       <div class="modal-card" id="modal-card"></div>
     </div>
 
+    <!-- Onboarding -->
     <div id="onboarding" class="onboarding hidden">
       <div class="onboarding-card">
         <div class="onboarding-progress">
@@ -117,18 +128,17 @@
         </div>
         <div id="ob-body"></div>
         <div class="onboarding-actions">
-          <button class="btn ghost" id="ob-skip">稍后再说 · Skip</button>
+          <button class="btn ghost" id="ob-skip" data-i18n-zh="稍后再说" data-i18n-en="Skip">稍后再说</button>
           <div class="row-actions">
-            <button class="btn" id="ob-back">上一步 · Back</button>
-            <button class="btn primary" id="ob-next">继续 · Continue</button>
+            <button class="btn" id="ob-back" data-i18n-zh="上一步" data-i18n-en="Back">上一步</button>
+            <button class="btn primary" id="ob-next" data-i18n-zh="继续" data-i18n-en="Continue">继续</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Sample data → mock API → Three viz → same app.js as desktop -->
-  <script src="/competitor-scout/data.js"></script>
+    <script src="/competitor-scout/data.js"></script>
   <script src="/competitor-scout/js/mock-api.js"></script>
   <script type="module" src="/competitor-scout/js/threat-viz.js"></script>
   <script src="/competitor-scout/js/app.js"></script>

@@ -70,7 +70,7 @@ function upsert(store, input) {
 
   if (input.id) {
     const idx = ps.items.findIndex((p) => p.id === input.id);
-    if (idx < 0) throw new AppError(Codes.NOT_FOUND, '产品不存在 · Product not found');
+    if (idx < 0) throw new AppError(Codes.NOT_FOUND, '产品不存在');
     ps.items[idx] = {
       ...ps.items[idx],
       ...cleaned,
@@ -102,7 +102,7 @@ function remove(store, id) {
   const ps = getState(store);
   const before = ps.items.length;
   ps.items = ps.items.filter((p) => p.id !== id);
-  if (ps.items.length === before) throw new AppError(Codes.NOT_FOUND, '产品不存在 · Product not found');
+  if (ps.items.length === before) throw new AppError(Codes.NOT_FOUND, '产品不存在');
   if (ps.activeId === id) {
     ps.activeId = ps.items[0]?.id || null;
   }
@@ -126,7 +126,7 @@ function remove(store, id) {
 function setActive(store, id) {
   const ps = getState(store);
   const found = ps.items.find((p) => p.id === id);
-  if (!found) throw new AppError(Codes.NOT_FOUND, '产品不存在 · Product not found');
+  if (!found) throw new AppError(Codes.NOT_FOUND, '产品不存在');
   ps.activeId = id;
   store.set('products', ps);
   store.set('product', stripId(found));
@@ -144,7 +144,7 @@ function resolveForScan(store, { productId, mode } = {}) {
   if (mode === 'all') return { products: all, active: getActive(store) };
   if (productId) {
     const p = all.find((x) => x.id === productId);
-    if (!p) throw new AppError(Codes.NOT_FOUND, '产品不存在 · Product not found');
+    if (!p) throw new AppError(Codes.NOT_FOUND, '产品不存在');
     return { products: [p], active: p };
   }
   const active = getActive(store);

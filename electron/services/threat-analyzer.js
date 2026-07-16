@@ -79,7 +79,7 @@ class ThreatAnalyzer {
         competitorIndex: i + 1,
         competitorTotal: total,
         competitorName: c.name,
-        message: `重算威胁 · Rescoring (${i + 1}/${total}): ${c.name}`,
+        message: `重算威胁 (${i + 1}/${total}): ${c.name}`,
         percent: total ? Math.round((i / total) * 100) : 0,
       });
       // 判定标准：多产品取最高威胁；RAG 默认只打在 active/指定产品上（非全量遍历）
@@ -195,7 +195,7 @@ class ThreatAnalyzer {
           productTotal: productList.length,
           competitorName: c.name,
           productName: p.name,
-          message: `对比 · Compare (${done + 1}/${total}): ${c.name} × ${p.name}`,
+          message: `对比 (${done + 1}/${total}): ${c.name} × ${p.name}`,
           percent: Math.round((done / total) * 100),
         });
 
@@ -240,7 +240,7 @@ class ThreatAnalyzer {
 
     onProgress({
       stage: 'done',
-      message: `对比完成 · Compare done: ${compList.length} competitors × ${productList.length} products`,
+      message: `对比完成：${compList.length} 竞品 × ${productList.length} 我方产品`,
       percent: 100,
     });
 

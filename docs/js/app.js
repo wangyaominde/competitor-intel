@@ -2,6 +2,7 @@
 (() => {
   const state = {
     page: 'dashboard',
+    lang: (typeof localStorage !== 'undefined' && localStorage.getItem('cs_lang')) || 'zh',
     notifications: [],
     scanRunning: false,
     scanLastStage: null,
@@ -112,7 +113,7 @@
     const currentProduct = {
       ...(focusProduct || {}),
       id: focusProduct?.id || 'self-current',
-      name: focusProduct?.name || '我方·现状 · Ours · Current',
+      name: focusProduct?.name || '我方·现状',
       threat_dimensions: currentDims,
       threat_score: avg(currentDims),
     };
@@ -120,8 +121,8 @@
     const targetProduct = {
       id: 'self-target',
       name: doc.positioning?.statement
-        ? `目标 Target：${String(doc.positioning.statement).slice(0, 18)}`
-        : '模拟目标 · Simulated target产品 · Simulated target product',
+        ? `目标：${String(doc.positioning.statement).slice(0, 18)}`
+        : '模拟目标产品',
       threat_dimensions: targetDims,
       threat_score: avg(targetDims),
       meta: {
@@ -160,7 +161,7 @@
     if (!el || !doc) return;
     if (!window.ThreatViz) {
       el.innerHTML =
-        '<p class="muted empty-hint" style="padding:40px">可视化加载中… · Loading… · Loading visualization…</p>';
+        '<p class="muted empty-hint" style="padding:40px">可视化加载中…</p>';
       setTimeout(() => mountRoadmapViz(doc), 400);
       return;
     }
@@ -192,9 +193,9 @@
       onSelect: (c) => {
         if (c?.id) openCompetitor(c.id);
       },
-      onSelectProduct: () => toast('蓝钻 = 我方现状 · Our current · Blue diamond = our current capability', 'info'),
+      onSelectProduct: () => toast('蓝钻 = 我方现状能力', 'info'),
       onSelectTarget: (t) =>
-        toast(t?.meta?.winTheme || t?.name || '金色 = AI 模拟目标 · Simulated target · Gold = AI simulated target product', 'info'),
+        toast(t?.meta?.winTheme || t?.name || '金色 = AI 模拟目标产品', 'info'),
     });
     state.roadmapViz.setRoadmapScene(model);
 
@@ -237,38 +238,38 @@
             <label id="rm-viz-y-wrap">Y <select id="rm-viz-y">${dimOptsHtml('features')}</select></label>
             <label id="rm-viz-z-wrap">Z <select id="rm-viz-z">${dimOptsHtml('channels')}</select></label>
           </div>
-          <span class="muted" style="font-size:11px;margin-left:auto">蓝 Blue=current · 金 Gold=target · 球 Ball=competitors · 金线 = beat path</span>
+          <span class="muted" style="font-size:11px;margin-left:auto">蓝=现状 · 金=模拟目标 · 球=竞品 · 金线=击败路径</span>
         </div>
         <div class="viz-canvas-wrap" id="rm-viz-canvas"></div>
         <div class="viz-legend">
-          <span><i class="swatch" style="background:#6b9bff"></i>我方现状 · Our current</span>
-          <span><i class="swatch" style="background:#fbbf24"></i>模拟目标 · Simulated target</span>
-          <span><i class="swatch" style="background:#fb7185"></i>高威胁竞品 · High-threat rivals</span>
+          <span><i class="swatch" style="background:#6b9bff"></i>我方现状</span>
+          <span><i class="swatch" style="background:#fbbf24"></i>模拟目标</span>
+          <span><i class="swatch" style="background:#fb7185"></i>高威胁竞品</span>
           <span class="viz-grad"><span>弱</span><i></i><span>强</span></span>
         </div>
-        <p class="viz-hint">多维能力空间 · Multi-dim capability space: roadmap → target; gold line = beat path; dashed = key rivals.</p>
+        <p class="viz-hint">多维能力空间：把 AI 路线图量化为「目标点」，金线表示从现状到目标的击败路径；虚线连向主要竞品。</p>
       </div>`;
   }
 
   const titles = {
-    dashboard: [L('仪表盘', 'Dashboard'), L('威胁态势、就绪度与待确认', 'Threat overview, readiness & pending review')],
-    competitors: [L('竞品库', 'Competitors'), L('三维威胁空间 · 卡片 · 高维表 · Table · 人工筛选', '3D space · cards · table · manual review')],
-    scan: [L('智能扫描', 'Smart Scan'), L('LLM 研究 + BM25/RAG 自动威胁 + 待人工筛选', 'LLM research + BM25/RAG threat + human review')],
-    product: [L('我的产品', 'My Products'), L('多产品 · 规格书 · Spec sheet上传解析 · 人工确认后入库', 'Multi-product · spec upload · confirm to save')],
-    roadmap: [L('击败路径', 'Beat Roadmap'), L('AI 模拟：要打败竞品，产品应做成什么样', 'AI plan: what the product should become to win')],
-    loop: [L('Loop 引擎', 'Loop Engine'), L('定时扫描，发现高威胁即通知 · Notifications', 'Scheduled scans · high-threat alerts')],
-    settings: [L('设置', 'Settings'), L('模型、通知 · Notifications、备份与导出', 'Model, notifications, backup & export')],
+    dashboard: ['仪表盘', '威胁态势、就绪度与待确认事项'],
+    competitors: ['竞品库', '三维威胁空间 · 卡片 · 高维表 · 人工筛选'],
+    scan: ['智能扫描', 'LLM 研究 + BM25/RAG 自动威胁 + 待人工筛选'],
+    product: ['我的产品', '多产品 · 规格书上传解析 · 人工确认后入库'],
+    roadmap: ['击败路径', 'AI 模拟：要打败竞品，产品应做成什么样'],
+    loop: ['Loop 引擎', '定时扫描，发现高威胁即通知'],
+    settings: ['设置', '模型、通知、备份与导出'],
   };
 
   const dimLabels = {
-    price: L('价格竞争力', 'Price competitiveness'),
-    category: L('品类重合', 'Category overlap'),
-    features: L('规格/功能', 'Features / specs'),
-    channels: L('渠道重合', 'Channel overlap'),
-    positioning: L('定位相似', 'Positioning fit'),
-    price_edge: L('价格压制', 'Price pressure'),
-    channel_edge: L('渠道广度', 'Channel breadth'),
-    completeness: L('情报完整度 · Intel completeness', 'Intel completeness'),
+    price: '价格竞争力',
+    category: '品类重合',
+    features: '规格/功能',
+    channels: '渠道重合',
+    positioning: '定位相似',
+    price_edge: '价格压制',
+    channel_edge: '渠道广度',
+    completeness: '情报完整度',
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -282,10 +283,567 @@
       .replace(/"/g, '&quot;');
   }
 
-  /** 中英双语 · Bilingual label */
+  /** English dictionary for UI language toggle (single language at a time, no mixed text) */
+  const EN = {
+  "兼容 OpenAI Chat Completions。支持 MiniMax / Kimi / DeepSeek / 通义 / Ollama 等。": "OpenAI-compatible Chat Completions. Supports MiniMax / Kimi / DeepSeek / Qwen / Ollama…",
+  "多维能力空间：把 AI 路线图量化为「目标点」，金线表示从现状到目标的击败路径；虚线连向主要竞品。": "Multi-dim capability space: roadmap → target; gold line = beat path; dashed = key rivals.",
+  "竞品扫描会做多轮研究；MiniMax/Kimi 建议 ≥120s。研究任务实际不低于 180s。": "Multi-round research; MiniMax/Kimi ≥120s recommended (≥180s for research).",
+  "单机本地应用，按专业产品标准打造：配置引导、就绪检查、多维威胁匹配、定时扫描与备份导出。": "Local desktop app: guided setup, readiness checks, multi-dim threat matching, scheduled scans, backup & export.",
+  "建议路径：完善规格与渠道 → 发起首次扫描 → 确认高威胁竞品 → 按需开启 Loop。": "Suggested path: enrich specs/channels → first scan → confirm high threats → enable Loop.",
+  "支持 OpenAI 兼容接口（MiniMax / Kimi 等）。可稍后在设置中修改。": "OpenAI-compatible APIs (MiniMax / Kimi…). Change later in Settings.",
+  "基于我方产品 + 高威胁竞品，AI 模拟「要赢该做成什么样」的可执行 Roadmap": "AI simulates an actionable roadmap from our product + high-threat competitors",
+  "填写兼容 OpenAI 的 Base URL / API Key / Model": "Set OpenAI-compatible Base URL / API Key / Model",
+  "拖拽旋转 · 滚轮缩放 · 点击球体/标签查看详情。多产品时威胁取最高分；空间以": "Drag to rotate, scroll to zoom, click for details. Multi-product: max threat; space origin is ",
+  "API 未注入，请使用 Electron 启动（npm start）": "API not injected — start with Electron (npm start)",
+  "威胁判定：基准产品 RAG + 多产品取最高（对比表不在此生成）": "Threat: baseline RAG + multi-product max (no param table here)",
+  "LLM 研究 + BM25/RAG 自动威胁 + 待人工筛选": "LLM research + BM25/RAG threat + human review",
+  "判定用 BM25+RAG；逐产品细致对比请到竞品库「对比表」": "Scoring: BM25+RAG · param compare in Competitors → Compare",
+  "蓝=现状 · 金=模拟目标 · 球=竞品 · 金线=击败路径": "Blue=current · Gold=target · Ball=competitors · Gold line=beat path",
+  "高维（≥4）用表呈现各维度分值；1–3 维请用「空间图」。": "High-dim (≥4) table; use Space view for 1–3 dims.",
+  "规格、渠道、关键词会显著提升威胁匹配精度；支持多产品组合": "Specs, channels & keywords improve threat matching",
+  "判定侧参考（取最高为威胁分）· 细致对比请用「对比表」": "Score reference (max = threat) · use Compare for detail",
+  "蓝钻=当前基准 · 青钻=其他我方产品 · 球=竞品": "Blue=baseline · Teal=other products · Ball=competitors",
+  "点下方历史「详情」可查看逐步过程、发现列表与威胁分。": "Open Details below for steps, finds & scores.",
+  "后台扫描实时日志见下方；历史点「详情」可看完整步骤。": "Live logs below; Details for full steps.",
+  "Three.js 可视化加载中…请稍后切换视图重试": "Three.js visualization loading… switch view to retry",
+  "三维威胁空间 · 卡片 · 高维表 · 人工筛选": "3D space · cards · table · manual review",
+  "至少添加 1 个产品，并补充品类、价格或描述之一": "Add at least 1 product with category, price, or description",
+  "等待扫描任务…阶段切换与每条竞品处理都会写在这里": "Waiting — stage changes & per-item logs appear here",
+  "本地单机存储。可导出竞品、整库备份或从备份恢复。": "Local-only storage. Export competitors, full backup, or restore.",
+  "多产品 · 规格书上传解析 · 人工确认后入库": "Multi-product · spec upload · confirm to save",
+  "这是威胁匹配的基准。名称必填，其他越完整越好。": "Threat-matching baseline. Name is required; more detail is better.",
+  "// 后台 / 立即执行时的进度会显示在这里": "// Progress for background / run-now appears here",
+  "恢复备份将覆盖当前数据与部分设置，是否继续？": "Restore will overwrite current data and some settings. Continue?",
+  "自配模型，结构化收集价格 / 规格 / 渠道": "Bring your own model; structured price / specs / channels",
+  "暂无邻域证据（库较小或尚未 RAG 重算）": "No neighbor evidence yet",
+  "AI 模拟：要打败竞品，产品应做成什么样": "AI plan: what the product should become to win",
+  "配置产品与竞品后，点击生成 AI 路线图": "After products & competitors, generate an AI roadmap",
+  "按规格参数一条一条对比，不写回威胁判定": "Param compare; does not write scores",
+  "心跳：任务仍在进行，当前阶段等待中（已": "Heartbeat: still running (",
+  "完成扫描后，在待确认队列中确认入库": "After scanning, confirm items in the pending queue",
+  "运行智能扫描，或手动添加第一家竞品": "Run Smart Scan or add the first competitor manually",
+  "生成中，可能需要 30–90 秒…": "Generating, may take 30–90s…",
+  "在对应开放平台获取 API Key": "Get API key from the provider console",
+  "确定删除该竞品？此操作不可撤销。": "Delete this competitor? This cannot be undone.",
+  "为原点，切换后建议「全库重算」。": " — rescore after switch.",
+  "扫描前需完成 LLM 与产品配置": "Complete LLM & product setup before scanning",
+  "切换后立即生效，并记住你的选择。": "Applies immediately and remembers your choice.",
+  "用 LLM 拉取第一批竞品候选": "Use the LLM to pull the first competitor candidates",
+  "把有效竞品从待确认推进到已入库": "Move valid competitors from pending to confirmed",
+  "搜索名称 / 公司 / 描述…": "Search name / company / description…",
+  "检测到旧版对比缓存，请重新生成": "Legacy compare cache — regenerate",
+  "Enrich 价格/规格/渠道": "Price / specs / channels",
+  "留空则根据「我的产品」自动生成": "Leave empty to auto-generate from My Products",
+  "还没有产品，请在下方添加第一个": "No products yet — add the first below",
+  "价格、功能、渠道、定位综合排名": "Rank by price, features, channels, positioning",
+  "让 Agent 拉取第一批候选": "Let the Agent pull the first candidates",
+  "威胁态势、就绪度与待确认事项": "Threat overview, readiness & pending review",
+  "判定：BM25+RAG · ": "Scoring: BM25+RAG · ",
+  "后台扫描与手动扫描共用此详情": "Background and manual scans share this detail view",
+  "金色 = AI 模拟目标产品": "Gold = AI simulated target product",
+  "定时扫描，发现高威胁即通知": "Scheduled scans · high-threat alerts",
+  "没有待确认项 — 干净利落": "Nothing pending — all clear",
+  "Discover 研究候选": "Research candidates",
+  "BM25 + RAG 评分": "BM25 + RAG scoring",
+  "发现 / 新增 / 高威胁": "Found / New / High threat",
+  "已填入表单，请检查后点保存": "Filled into form — review then save",
+  "Kimi 月之暗面（国内）": "Kimi (China)",
+  "威胁态势、就绪度与待确认": "Threat overview, readiness & pending review",
+  "正在按规格参数逐条对比…": "Comparing params…",
+  "AI 正在推演击败路径…": "AI is planning the beat path…",
+  "交叉校验候选质量后再入库": "Cross-check candidates before saving",
+  "模型、通知、备份与导出": "Model, notifications, backup & export",
+  "按判定规则重算威胁分…": "Rescoring by rules…",
+  "就绪 · 等待发起扫描": "Ready — waiting to start scan",
+  "蓝钻 = 我方现状能力": "Blue diamond = our current capability",
+  "Provider 预设": "Provider preset",
+  "MiniMax（国内）": "MiniMax (China)",
+  "MiniMax（国际）": "MiniMax (Intl)",
+  "自动盯盘，高威胁即通知": "Watch the market; alert on high threat",
+  "Desktop app": "Desktop app",
+  "威胁态势与待确认竞品": "Threat overview & pending review",
+  "威胁指数 ≥ 65%": "Threat score ≥ 65%",
+  "按判定规则重算威胁分": "Rescore by rules",
+  "确认至少 1 个竞品": "Confirm at least 1 competitor",
+  "Agent 确认中…": "Agent verifying…",
+  "Agent 确认完成": "Agent verify done",
+  "备注 / Agent": "Notes / Agent",
+  "Agent 交叉确认": "Agent cross-check",
+  "无逐步日志（旧记录）": "No step logs (legacy)",
+  "销售渠道（逗号分隔）": "Sales channels (comma-separated)",
+  "拖拽或点击上传规格书": "Drag or click to upload specs",
+  "请先勾选要写入的字段": "Select fields to write first",
+  "请先勾选要填入的字段": "Select fields to fill first",
+  "正文过长已截断后解析": "Truncated long body before parse",
+  "// 开始后台一轮…": "// Starting background cycle…",
+  "高威胁竞品出现时弹出": "Popup when a high-threat competitor appears",
+  "仅高置信(≥70%)": "High confidence only (≥70%)",
+  "Agent 二次确认": "Agent re-verify",
+  "3. 开启 Loop": "3. Enable Loop",
+  "配置完成，开始使用吧": "Setup done — start exploring",
+  "规格与渠道（推荐）": "Specs & channels (recommended)",
+  "BM25 检索证据": "BM25 evidence",
+  "关键词（逗号分隔）": "Keywords (comma-separated)",
+  "请选择规格书文件…": "Choose spec files…",
+  "正在读取拖入文件…": "Reading dropped files…",
+  "填写后点击添加产品": "Fill in then click Add product",
+  "每周一 09:00": "Every Monday 09:00",
+  "Loop 扫描失败": "Loop scan failed",
+  "LLM 配置已保存": "LLM settings saved",
+  "120 秒（推荐）": "120s (recommended)",
+  "Ollama 本地": "Ollama local",
+  "Loop 定时巡检": "Loop scheduled watch",
+  "发现高威胁自动通知": "Auto-notify on high threat",
+  "只把真正的对手入库": "Keep only real rivals",
+  "最高威胁相对我方：": "Highest threat vs ours: ",
+  "Must-have": "Must-have",
+  "正在加载工作区…": "Loading workspace…",
+  "Loop 未启动": "Loop off",
+  "还可继续完善配置": "you can refine setup further",
+  "还没有已确认竞品": "No confirmed competitors yet",
+  "高威胁 ≥65%": "High ≥65%",
+  "Agent 确认": "Agent verify",
+  "RAG 威胁结论": "RAG threat conclusion",
+  "不写入威胁判定分": "Does not write threat scores",
+  "参数逐项对比中…": "Comparing params…",
+  "对齐（不改判定）": "align (does not change scores)",
+  "未抽取出可用字段": "No usable fields extracted",
+  "AI 生成路线图": "Generate AI roadmap",
+  "主打产品（聚焦）": "Focus product",
+  "战略目标（可选）": "Strategic goal (optional)",
+  "打谁 / 怎么赢": "Who to beat / how to win",
+  "先配齐产品与竞品": "Set up products & competitors first",
+  "每天 09:00": "Daily 09:00",
+  "Loop 已启动": "Loop started",
+  "Loop 已停止": "Loop stopped",
+  "LLM 连接成功": "LLM connected",
+  "Kimi（国际）": "Kimi (Intl)",
+  "欢迎使用竞品情报": "Welcome to Competitor Scout",
+  "LLM 研究扫描": "LLM research scan",
+  "2. 竞品库确认": "2. Confirm in library",
+  "Loop 引擎": "Loop Engine",
+  "请完成基础配置": "Complete basic setup",
+  "已确认竞品均值": "Mean of confirmed",
+  "全库重算判定…": "Rescoring all…",
+  "极高 ≥75%": "Extreme ≥75%",
+  "中高 ≥40%": "Mid-high ≥40%",
+  "后台 Loop": "Background Loop",
+  "扫描完成，新增": "Scan done, new",
+  "规格 JSON": "Specs JSON",
+  "击败路径已生成": "Beat roadmap generated",
+  "已加载历史版本": "Loaded historical version",
+  "生成后人工裁剪": "Human edit after generate",
+  "可视化加载中…": "Loading visualization…",
+  "启动 Loop": "Start Loop",
+  "高威胁通知阈值": "High-threat alert threshold",
+  "65%（推荐）": "65% (recommended)",
+  "每 12 小时": "Every 12 hours",
+  "后台扫描也会写": "Background scans also write ",
+  "完整日志与明细": "full logs & details",
+  "通知设置已保存": "Notification settings saved",
+  "导出 JSON": "Export JSON",
+  "连接你的大模型": "Connect your LLM",
+  "1. 智能扫描": "1. Smart Scan",
+  "点击查看详情": "Click for details",
+  "暂无扫描记录": "No scan history",
+  "全库重算判定": "Rescore all",
+  "任务进行中…": "Task in progress…",
+  "判定已更新：": "Updated: ",
+  "完善产品画像": "Complete product profile",
+  "完成首次扫描": "Complete first scan",
+  "竞品库是空的": "Competitor library is empty",
+  "人工确认入库": "Confirm to library",
+  "尚未自动判定": "Not scored yet",
+  "多维威胁画像": "Multi-dim threat profile",
+  "手动添加竞品": "Add competitor manually",
+  "不改威胁判定": "Does not change threat scores",
+  "规格参数逐项": "param-by-param",
+  "等待模型响应": "Waiting for model",
+  "扫描进行中…": "Scan in progress…",
+  "开始扫描任务": "Scan task started",
+  "产品名称 *": "Product name *",
+  "确认写入产品": "Confirm write to product",
+  "全部我方产品": "All our products",
+  "请先添加产品": "Add a product first",
+  "未检测到文件": "No file detected",
+  "已创建新产品": "Created new product",
+  "已合并到产品": "Merged into product",
+  "生成击败路径": "Generate beat path",
+  "本周可行动作": "Actions this week",
+  "选定主打产品": "Pick focus product",
+  "模拟目标产品": "Simulated target product",
+  "立即执行一轮": "Run one cycle now",
+  "每 2 小时": "Every 2 hours",
+  "每 4 小时": "Every 4 hours",
+  "每 6 小时": "Every 6 hours",
+  "定时扫描完成": "Scheduled scan done",
+  "LLM 配置": "LLM settings",
+  "导出 CSV": "Export CSV",
+  "多维向量威胁": "Multi-dim threat vectors",
+  "定义你的产品": "Define your product",
+  "配置就绪度": "Readiness",
+  "待人工确认": "Pending review",
+  "价格竞争力": "Price competitiveness",
+  "规格/功能": "Features / specs",
+  "情报完整度": "Intel completeness",
+  "待确认队列": "Pending queue",
+  "已确认入库": "Confirmed & saved",
+  "配置大模型": "Configure LLM",
+  "可继续补充": "— keep refining",
+  "参数对比表": "Param compare",
+  "高威胁连线": "High-threat links",
+  "保存并评分": "Save & score",
+  "我方数值高": "Ours higher",
+  "竞品数值高": "Theirs higher",
+  "初始化任务": "Init task",
+  "入库待筛选": "Saved for review",
+  "流水线状态": "Pipeline status",
+  "（非卡死）": "(not stuck)",
+  "运行日志（": "Run log (",
+  "等待上传…": "Waiting for upload…",
+  "已切换基准": "Baseline switched",
+  "未配置产品": "No product configured",
+  "一句话描述": "One-line description",
+  "分阶段路线": "Phased roadmap",
+  "上次生成：": "Last: ",
+  "高威胁竞品": "High-threat rivals",
+  "我方·现状": "Ours · Current",
+  "别盲目抄：": "Don't blindly copy: ",
+  "发/新/危": "F/N/T",
+  "配置已保存": "Settings saved",
+  "正在执行…": "Running…",
+  "连接成功：": "Connected: ",
+  "180 秒": "180s",
+  "300 秒": "300s",
+  "你的产品名": "Your product name",
+  "价/规/渠": "P/S/C",
+  "竞品情报": "Competitor Scout",
+  "智能扫描": "Smart Scan",
+  "我的产品": "My Products",
+  "击败路径": "Beat Roadmap",
+  "立即扫描": "Scan now",
+  "暂无通知": "No notifications",
+  "稍后再说": "Skip",
+  "进入应用": "Enter app",
+  "操作失败": "Failed",
+  "加载失败": "Load failed",
+  "启动失败": "Startup failed",
+  "扫描中…": "Scanning…",
+  "品类重合": "Category overlap",
+  "渠道重合": "Channel overlap",
+  "定位相似": "Positioning fit",
+  "价格压制": "Price pressure",
+  "渠道广度": "Channel breadth",
+  "综合威胁": "Overall threat",
+  "尚未就绪": "Not ready",
+  "查看清单": "View checklist",
+  "竞品总量": "Total competitors",
+  "平均威胁": "Avg threat",
+  "配置清单": "Setup checklist",
+  "最具威胁": "Top threats",
+  "扫描历史": "Scan history",
+  "手动添加": "Add manually",
+  "全部状态": "All statuses",
+  "全部威胁": "All threats",
+  "全部方法": "All methods",
+  "规则回退": "Rules fallback",
+  "参数对比": "Compare",
+  "空间基准": "Space baseline",
+  "当前基准": "Active baseline",
+  "其他我方": "Other ours",
+  "销售渠道": "Sales channels",
+  "最近更新": "Updated",
+  "重算判定": "Rescore",
+  "暂无描述": "No description",
+  "仅我方有": "Ours only",
+  "仅竞品有": "Theirs only",
+  "我方更高": "Ours higher",
+  "竞品更高": "Theirs higher",
+  "重新生成": "Regenerate",
+  "我方产品": "Our product",
+  "尚未开始": "Not started",
+  "仍在处理": "Still working",
+  "发起扫描": "Start a scan",
+  "开始扫描": "Start scan",
+  "运行日志": "Run log",
+  "启动中…": "Starting…",
+  "扫描失败": "Scan failed",
+  "候选数量": "Candidate count",
+  "扫描详情": "Scan details",
+  "基准产品": "Baseline product",
+  "搜索意图": "Search intent",
+  "发现竞品": "Found competitors",
+  "本轮新增": "New this run",
+  "入库明细": "Saved items",
+  "扫描完成": "Scan complete",
+  "设为基准": "Set baseline",
+  "添加产品": "Add product",
+  "编辑产品": "Edit product",
+  "新建产品": "New product",
+  "产品组合": "Product portfolio",
+  "产品描述": "Description",
+  "清空表单": "Clear form",
+  "选择文件": "Choose files",
+  "原文预览": "Source preview",
+  "保存修改": "Save changes",
+  "暂无规格": "No specs",
+  "基础信息": "Basics",
+  "规格参数": "Specs",
+  "抽取说明": "Extract notes",
+  "生成失败": "Generation failed",
+  "使用建议": "Tips",
+  "价格策略": "Pricing strategy",
+  "渠道策略": "Channel strategy",
+  "能力差距": "Capability gaps",
+  "关键假设": "Key assumptions",
+  "主打产品": "Focus product",
+  "生成时间": "Generated",
+  "已生成：": "Generated: ",
+  "我方现状": "Our current",
+  "模拟目标": "Simulated target",
+  "引擎状态": "Engine status",
+  "威胁阈值": "Threat threshold",
+  "上次运行": "Last run",
+  "上次结果": "Last result",
+  "重启调度": "Restart schedule",
+  "上次详情": "Last details",
+  "调度配置": "Schedule config",
+  "扫描频率": "Scan frequency",
+  "保存配置": "Save config",
+  "实时日志": "Live log",
+  "暂无记录": "No records",
+  "未知错误": "Unknown error",
+  "测试中…": "Testing…",
+  "备份完成": "Backup done",
+  "恢复成功": "Restore successful",
+  "完整备份": "Full backup",
+  "恢复备份": "Restore backup",
+  "60 秒": "60s",
+  "通义千问": "Qwen",
+  "桌面通知": "Desktop notifications",
+  "界面语言": "UI language",
+  "快速预设": "Quick preset",
+  "一切就绪": "You are all set",
+  "高威胁 ": "High ",
+  "中威胁 ": "Mid ",
+  "低威胁 ": "Low ",
+  "（人工）": "(manual)",
+  "判定最高": "Top score",
+  "竞品键：": "Their key: ",
+  "就绪度": "Ready",
+  "仪表盘": "Dashboard",
+  "竞品库": "Competitors",
+  "上一步": "Back",
+  "运行中": "Running",
+  "已停止": "Stopped",
+  "已完成": "Done",
+  "进行中": "In progress",
+  "待确认": "Pending",
+  "已确认": "Confirmed",
+  "已忽略": "Dismissed",
+  "去完成": "Continue setup",
+  "去扫描": "Go scan",
+  "高威胁": "High threat",
+  "个竞品": " competitors",
+  "已配置": "Configured",
+  "个产品": " products",
+  "仅规则": "Rules only",
+  "空间图": "Space",
+  "高维表": "Table",
+  "无匹配": "No matches",
+  "渠道维": "Channels",
+  "渠道广": "Channel reach",
+  "完整度": "Completeness",
+  "已删除": "Deleted",
+  "已添加": "Added",
+  "我方值": "Ours",
+  "竞品值": "Theirs",
+  "对比表": "Compare table",
+  "已静默": "quiet",
+  "去配置": "Configure",
+  "全不选": "Clear all",
+  "已保存": "Saved",
+  "无渠道": "No channels",
+  "北极星": "North star",
+  "优先级": "Priority",
+  "差异化": "Differentiation",
+  "未命名": "Untitled",
+  "执行中": "Running",
+  "每小时": "Hourly",
+  "失败：": "Failed: ",
+  "自定义": "Custom",
+  "大模型": "LLM",
+  "已导出": "Exported",
+  "设置": "Settings",
+  "通知": "Notifications",
+  "导出": "Export",
+  "继续": "Continue",
+  "确认": "Confirm",
+  "忽略": "Dismiss",
+  "关闭": "Close",
+  "详情": "Details",
+  "保存": "Save",
+  "删除": "Delete",
+  "取消": "Cancel",
+  "重试": "Retry",
+  "添加": "Add",
+  "编辑": "Edit",
+  "停止": "Stop",
+  "完成": "Done",
+  "失败": "Failed",
+  "成功": "Success",
+  "待命": "Idle",
+  "后台": "Background",
+  "手动": "Manual",
+  "时间": "Time",
+  "状态": "Status",
+  "发现": "Found",
+  "新增": "New",
+  "摘要": "Summary",
+  "规则": "Rules",
+  "卡片": "Cards",
+  "竞品": "Competitor",
+  "价格": "Price",
+  "品类": "Category",
+  "规格": "Specs",
+  "定位": "Positioning",
+  "标价": "List price",
+  "操作": "Actions",
+  "名称": "Name",
+  "公司": "Company",
+  "描述": "Description",
+  "渠道": "Channels",
+  "备注": "Notes",
+  "官网": "Website",
+  "方法": "Method",
+  "相同": "Same",
+  "不同": "Different",
+  "参数": "Param",
+  "对比": "Compare",
+  "启动": "Start",
+  "补全": "Enrich",
+  "威胁": "Threat",
+  "校验": "Verify",
+  "错误": "Error",
+  "信息": "Info",
+  "全选": "Select all",
+  "用户": "User",
+  "战场": "Battlefield",
+  "赢法": "Win theme",
+  "领域": "Area",
+  "现状": "Current",
+  "目标": "Target",
+  "对标": "Benchmark",
+  "紧急": "Urgency",
+  "动作": "Action",
+  "角色": "Owner",
+  "指标": "Metric",
+  "基线": "Baseline",
+  "节点": "Milestone",
+  "风险": "Risks",
+  "跨度": "Horizon",
+  "阶段": "Phase",
+  "差异": "Diff",
+  "调度": "Schedule",
+  "频率": "Frequency",
+  "来源": "Source",
+  "数据": "Data",
+  "中文": "Chinese",
+  "语言": "Language",
+  "是": "Yes",
+  "否": "No",
+  "无": "None",
+  "弱": "Weak",
+  "强": "Strong",
+  "低": "Low",
+  "高": "High",
+  "条": " rows"
+};
+  const EN_KEYS = Object.keys(EN).sort((a, b) => b.length - a.length);
+  // Partial replace only for longer phrases to avoid mangling product names (e.g. 高/是)
+  const EN_PARTIAL_KEYS = EN_KEYS.filter((k) => k.length >= 2 && !/^[是否无高低强弱]$/.test(k));
+
+  /** Translate a pure Chinese UI string when lang=en */
+  function t(zh) {
+    if (zh == null) return '';
+    const s = String(zh);
+    if (state.lang !== 'en') return s;
+    if (EN[s] != null) return EN[s];
+    // longest-first partial replace for composite strings
+    let out = s;
+    for (const k of EN_PARTIAL_KEYS) {
+      if (k && out.includes(k)) out = out.split(k).join(EN[k]);
+    }
+    return out;
+  }
+
+  /** Optional explicit bilingual helper */
   function L(zh, en) {
-    if (en == null || en === '') return zh;
-    return zh + ' · ' + en;
+    return state.lang === 'en' ? (en != null && en !== '' ? en : t(zh)) : zh;
+  }
+
+  function trHtml(html) {
+    if (state.lang !== 'en' || html == null) return html;
+    let out = String(html);
+    for (const k of EN_PARTIAL_KEYS) {
+      if (k && out.includes(k)) out = out.split(k).join(EN[k]);
+    }
+    return out;
+  }
+
+  function setLang(lang, { persist = true, rerender = true } = {}) {
+    state.lang = lang === 'en' ? 'en' : 'zh';
+    try { localStorage.setItem('cs_lang', state.lang); } catch { /* ignore */ }
+    document.documentElement.lang = state.lang === 'en' ? 'en' : 'zh-CN';
+    applyShellI18n();
+    document.querySelectorAll('.lang-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.lang === state.lang);
+    });
+    if (persist) {
+      try { api.saveSettings?.({ ui: { lang: state.lang } }); } catch { /* ignore */ }
+    }
+    if (rerender) {
+      const page = state.page;
+      const [tt, ss] = titles[page] || ['', ''];
+      const titleEl = document.querySelector('#page-title');
+      const subEl = document.querySelector('#page-sub');
+      if (titleEl) titleEl.textContent = t(tt);
+      if (subEl) subEl.textContent = t(ss);
+      if (typeof renderPage === 'function') renderPage();
+      if (typeof refreshLoopPill === 'function') refreshLoopPill();
+      const ob = document.querySelector('#onboarding');
+      if (ob && !ob.classList.contains('hidden') && typeof renderOnboardingStep === 'function') {
+        renderOnboardingStep();
+      }
+    }
+  }
+
+  function applyShellI18n() {
+    document.querySelectorAll('[data-i18n-zh]').forEach((el) => {
+      const zh = el.getAttribute('data-i18n-zh') || '';
+      const en = el.getAttribute('data-i18n-en') || '';
+      const val = L(zh, en);
+      const icon = el.querySelector(':scope > .nav-icon');
+      if (icon) {
+        el.innerHTML = '';
+        el.appendChild(icon);
+        el.appendChild(document.createTextNode(' ' + val));
+      } else {
+        el.textContent = val;
+      }
+    });
+    document.querySelectorAll('[data-i18n-title-zh]').forEach((el) => {
+      el.title = L(el.getAttribute('data-i18n-title-zh') || '', el.getAttribute('data-i18n-title-en') || '');
+    });
+    const brandStrong = document.querySelector('.brand-text strong');
+    if (brandStrong) brandStrong.textContent = L('竞品情报', 'Competitor Scout');
+    const brandSpan = document.querySelector('.brand-text span');
+    if (brandSpan) brandSpan.textContent = 'Competitor Scout';
+    document.title = L('竞品情报', 'Competitor Scout');
+    const bootTitle = document.querySelector('.boot-title');
+    if (bootTitle) bootTitle.textContent = L('竞品情报', 'Competitor Scout');
+    const bootSub = document.querySelector('.boot-sub');
+    if (bootSub) bootSub.textContent = L('正在加载工作区…', 'Loading workspace…');
   }
 
   /** 统一解包 { ok, data, error } */
@@ -294,7 +852,7 @@
     if (res == null) return null;
     if (typeof res === 'object' && 'ok' in res) {
       if (!res.ok) {
-        const msg = res.error?.message || '操作失败 · Failed';
+        const msg = t(res.error?.message || '操作失败');
         const err = new Error(msg);
         err.code = res.error?.code;
         err.details = res.error?.details;
@@ -310,7 +868,7 @@
     const n = Number(v);
     if (!Number.isFinite(n)) return String(v);
     try {
-      return new Intl.NumberFormat('zh-CN', {
+      return new Intl.NumberFormat(state.lang === 'en' ? 'en-US' : 'zh-CN', {
         style: 'currency',
         currency: unit === 'USD' ? 'USD' : unit === 'EUR' ? 'EUR' : 'CNY',
         maximumFractionDigits: 0,
@@ -328,9 +886,9 @@
 
   function threatLabel(score) {
     const pct = Math.round((score || 0) * 100);
-    if (score >= 0.65) return `高威胁 High ${pct}%`;
-    if (score >= 0.4) return `中威胁 Mid ${pct}%`;
-    return `低威胁 Low ${pct}%`;
+    if (score >= 0.65) return t(`高威胁 ${pct}%`);
+    if (score >= 0.4) return t(`中威胁 ${pct}%`);
+    return t(`低威胁 ${pct}%`);
   }
 
   function avatarText(name) {
@@ -347,16 +905,11 @@
   }
 
   function statusText(s) {
-    return (
-      {
-        pending: L('待确认', 'Pending'),
-        confirmed: L('已确认 · Confirmed', 'Confirmed'),
-        rejected: L('已忽略 · Dismissed', 'Dismissed'),
-      }[s] || s
-    );
+    return { pending: '待确认', confirmed: '已确认', rejected: '已忽略' }[s] || s;
   }
 
   function toast(msg, type = 'info') {
+    msg = t(msg);
     const el = document.createElement('div');
     el.className = `toast ${type}`;
     el.textContent = msg;
@@ -388,7 +941,7 @@
   function renderNotifyList() {
     const list = $('#notify-list');
     if (!state.notifications.length) {
-      list.innerHTML = '<p class="muted empty-hint">暂无通知 · Notifications · No notifications</p>';
+      list.innerHTML = `<p class="muted empty-hint">${esc(t('暂无通知'))}</p>`;
       return;
     }
     list.innerHTML = state.notifications
@@ -429,7 +982,7 @@
         bar.className = 'threat-progress';
         bar.innerHTML = `
           <div class="threat-progress-top">
-            <span id="threat-progress-text">待命 · Idle</span>
+            <span id="threat-progress-text">待命</span>
             <strong id="threat-progress-pct">0%</strong>
           </div>
           <div class="progress"><i id="threat-progress-fill"></i></div>`;
@@ -461,10 +1014,10 @@
       const text = $('#loop-pill-text');
       if (st.isScheduled || st.enabled) {
         pill.classList.add('on');
-        text.textContent = st.isRunning ? '扫描中… · Scanning…' : `Loop · ${st.nextHint || '运行中 · Running'}`;
+        text.textContent = st.isRunning ? t('扫描中…') : `Loop · ${st.nextHint || t('运行中')}`;
       } else {
         pill.classList.remove('on');
-        text.textContent = 'Loop 未启动 · Loop off';
+        text.textContent = t('Loop 未启动');
       }
     } catch { /* ignore */ }
   }
@@ -495,9 +1048,9 @@
     disposeThreatViz();
     state.page = page;
     $$('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
-    const [t, s] = titles[page] || ['', ''];
-    $('#page-title').textContent = t;
-    $('#page-sub').textContent = s;
+    const [tt, ss] = titles[page] || ['', ''];
+    $('#page-title').textContent = t(tt);
+    $('#page-sub').textContent = t(ss);
     renderPage();
   }
 
@@ -507,11 +1060,11 @@
     try {
       switch (state.page) {
         case 'dashboard':
-          content.innerHTML = await pageDashboard();
+          content.innerHTML = trHtml(await pageDashboard());
           bindDashboard();
           break;
         case 'competitors':
-          content.innerHTML = await pageCompetitors();
+          content.innerHTML = trHtml(await pageCompetitors());
           bindCompetitors();
           break;
         case 'scan':
@@ -519,34 +1072,34 @@
           bindScan();
           break;
         case 'product':
-          content.innerHTML = await pageProduct();
+          content.innerHTML = trHtml(await pageProduct());
           bindProduct();
           break;
         case 'roadmap':
-          content.innerHTML = await pageRoadmap();
+          content.innerHTML = trHtml(await pageRoadmap());
           bindRoadmap();
           break;
         case 'loop':
-          content.innerHTML = await pageLoop();
+          content.innerHTML = trHtml(await pageLoop());
           bindLoop();
           break;
         case 'settings':
-          content.innerHTML = await pageSettings();
+          content.innerHTML = trHtml(await pageSettings());
           bindSettings();
           break;
         default:
           content.innerHTML = '';
       }
     } catch (err) {
-      content.innerHTML = `
+      content.innerHTML = trHtml(`
         <div class="card">
           <div class="empty-state">
             <div class="icon">!</div>
-            <h4>加载失败 · Load failed</h4>
-            <p>${esc(err.message)}</p>
-            <button class="btn primary" id="btn-retry">重试 · Retry</button>
+            <h4>加载失败</h4>
+            <p>${esc(t(err.message))}</p>
+            <button class="btn primary" id="btn-retry">重试</button>
           </div>
-        </div>`;
+        </div>`);
       $('#btn-retry')?.addEventListener('click', () => renderPage());
     }
     refreshLoopPill();
@@ -566,8 +1119,8 @@
 
     const banner = !checklistComplete
       ? `<div class="banner ${r.canScan ? '' : 'warn'}">
-            <span>${r.canScan ? `就绪度 ${r.percent}% · Ready — you can refine setup further` : `尚未就绪（${r.percent}%）· Not ready — ${esc(r.next?.title || '请完成基础配置 · Complete basic setup')}`}</span>
-            <button class="btn sm" id="btn-goto-next">${r.canScan ? '查看清单 · Checklist' : '去完成 · Continue'}</button>
+            <span>${r.canScan ? `就绪度 ${r.percent}% — 还可继续完善配置` : `尚未就绪（${r.percent}%）— ${esc(r.next?.title || '请完成基础配置')}`}</span>
+            <button class="btn sm" id="btn-goto-next">${r.canScan ? '查看清单' : '去完成'}</button>
           </div>`
       : '';
 
@@ -597,7 +1150,7 @@
       </div>`
       )
       .join('') ||
-      emptyState('◎', '还没有已确认 · Confirmed竞品 · No confirmed competitors yet', '完成扫描后，在待确认队列 · Pending queue中确认入库 · After scan, confirm items in the pending queue', '去扫描 · Go scan', 'dash-to-scan');
+      emptyState('◎', '还没有已确认竞品', '完成扫描后，在待确认队列中确认入库', '去扫描', 'dash-to-scan');
 
     const pendingRows = (stats.pendingList || [])
       .map(
@@ -609,22 +1162,22 @@
           <div class="item-sub">${esc(c.threat_reason || c.description || '待确认')}</div>
         </div>
         <div class="row-actions" onclick="event.stopPropagation()">
-          <button class="btn sm success" data-confirm="${esc(c.id)}">确认 · Confirm</button>
-          <button class="btn sm danger" data-reject="${esc(c.id)}">忽略 · Dismiss</button>
+          <button class="btn sm success" data-confirm="${esc(c.id)}">确认</button>
+          <button class="btn sm danger" data-reject="${esc(c.id)}">忽略</button>
         </div>
       </div>`
       )
-      .join('') || '<p class="muted empty-hint">没有待确认项 — 干净利落 · Nothing pending</p>';
+      .join('') || '<p class="muted empty-hint">没有待确认项 — 干净利落</p>';
 
     const cov = stats.coverage || {};
     const histRows = (history || [])
       .map(
         (h) => `
-      <tr class="clickable-row" data-history-id="${esc(h.id)}" title="点击查看详情 · Click for details">
+      <tr class="clickable-row" data-history-id="${esc(h.id)}" title="点击查看详情">
         <td>${esc(fmtTime(h.started_at))}</td>
         <td>
           <span class="chip ${h.status === 'done' ? 'green' : h.status === 'error' ? 'red' : 'blue'}">${esc(h.status)}</span>
-          ${h.trigger === 'loop' ? '<span class="chip purple">后台 · BG</span>' : '<span class="chip">手动 · Manual</span>'}
+          ${h.trigger === 'loop' ? '<span class="chip purple">后台</span>' : '<span class="chip">手动</span>'}
         </td>
         <td>${h.found_count ?? 0}</td>
         <td>${h.new_count ?? 0}</td>
@@ -632,30 +1185,30 @@
         <td class="muted">${esc(h.summary || h.error || h.product_name || '—')}</td>
       </tr>`
       )
-      .join('') || '<tr><td colspan="6" class="muted">暂无扫描记录 · No scan history</td></tr>';
+      .join('') || '<tr><td colspan="6" class="muted">暂无扫描记录</td></tr>';
 
     return `
       ${banner}
       <div class="grid stats">
         <div class="card stat-card">
-          <div class="stat-label">竞品总量 · Total competitors</div>
+          <div class="stat-label">竞品总量</div>
           <div class="stat-value">${stats.total}</div>
-          <div class="stat-hint">已确认 · Confirmed Confirmed ${stats.confirmed} · 待确认 Pending ${stats.pending}</div>
+          <div class="stat-hint">已确认 ${stats.confirmed} · 待确认 ${stats.pending}</div>
         </div>
         <div class="card stat-card">
-          <div class="stat-label">高威胁 · High threat</div>
+          <div class="stat-label">高威胁</div>
           <div class="stat-value" style="color:var(--danger)">${stats.highThreat}</div>
-          <div class="stat-hint">威胁指数 ≥ 65% · Threat score ≥ 65%</div>
+          <div class="stat-hint">威胁指数 ≥ 65%</div>
         </div>
         <div class="card stat-card">
-          <div class="stat-label">平均威胁 · Avg threat</div>
+          <div class="stat-label">平均威胁</div>
           <div class="stat-value">${Math.round((stats.avgThreat || 0) * 100)}%</div>
-          <div class="stat-hint">已确认 · Confirmed竞品均值 · Mean of confirmed</div>
+          <div class="stat-hint">已确认竞品均值</div>
         </div>
         <div class="card stat-card">
-          <div class="stat-label">情报完整度 · Intel completeness</div>
+          <div class="stat-label">情报完整度</div>
           <div class="stat-value">${Math.round(((cov.price || 0) + (cov.channels || 0) + (cov.specs || 0)) / 3)}%</div>
-          <div class="stat-hint">价格 Price ${cov.price || 0}% · 渠道 Channels ${cov.channels || 0}% · 规格 Specs ${cov.specs || 0}%</div>
+          <div class="stat-hint">价格 ${cov.price || 0}% · 渠道 ${cov.channels || 0}% · 规格 ${cov.specs || 0}%</div>
         </div>
       </div>
 
@@ -664,26 +1217,26 @@
           checklistComplete
             ? ''
             : `<div class="card">
-          <h3>配置清单 · Setup checklist <span class="muted" style="font-weight:500;font-size:12px">${r.percent || 0}%</span></h3>
+          <h3>配置清单 <span class="muted" style="font-weight:500;font-size:12px">${r.percent || 0}%</span></h3>
           <div class="check-list">${checks}</div>
         </div>`
         }
         <div class="card">
-          <h3>待确认队列 · Pending queue</h3>
+          <h3>待确认队列</h3>
           ${pendingRows}
         </div>
       </div>
 
       <div class="grid two section-gap">
         <div class="card">
-          <h3>最具威胁 · Top threats <button class="btn sm" id="btn-reanalyze" title="按判定规则重算威胁分 · Rescore by rules">全库重算判定 · Rescore all</button></h3>
+          <h3>最具威胁 <button class="btn sm" id="btn-reanalyze" title="按判定规则重算威胁分">全库重算判定</button></h3>
           ${topRows}
         </div>
         <div class="card">
-          <h3>扫描历史 · Scan history</h3>
+          <h3>扫描历史</h3>
           <table class="table">
             <thead>
-              <tr><th>时间 · Time</th><th>状态 · Status</th><th>发现 · Found</th><th>新增 · New</th><th>高威胁 · High threat</th><th>摘要 · Summary</th></tr>
+              <tr><th>时间</th><th>状态</th><th>发现</th><th>新增</th><th>高威胁</th><th>摘要</th></tr>
             </thead>
             <tbody>${histRows}</tbody>
           </table>
@@ -697,7 +1250,7 @@
       el.addEventListener('click', async () => {
         try {
           await call(api.confirmCompetitor(el.dataset.confirm));
-          toast('已确认 · Confirmed入库 · Confirmed & saved', 'success');
+          toast('已确认入库', 'success');
           renderPage();
         } catch (e) {
           toast(e.message, 'error');
@@ -708,7 +1261,7 @@
       el.addEventListener('click', async () => {
         try {
           await call(api.rejectCompetitor(el.dataset.reject));
-          toast('已忽略 · Dismissed', 'info');
+          toast('已忽略', 'info');
           renderPage();
         } catch (e) {
           toast(e.message, 'error');
@@ -727,16 +1280,16 @@
     $('#dash-to-scan')?.addEventListener('click', () => navigate('scan'));
     $('#btn-reanalyze')?.addEventListener('click', async () => {
       if (state.threatRunning) {
-        toast('任务进行中… · In progress… · Task in progress…', 'info');
+        toast('任务进行中…', 'info');
         return;
       }
       state.threatRunning = true;
-      showThreatProgress(true, '全库重算判定 · Rescore all… · Rescoring all…', 0);
+      showThreatProgress(true, '全库重算判定…', 0);
       try {
-        toast('按判定规则重算威胁分 · Rescore by rules… · Rescoring by rules…', 'info');
+        toast('按判定规则重算威胁分…', 'info');
         const res = await call(api.analyzeAllThreats());
-        toast(`判定已更新 · Updated: ${res?.competitorCount ?? 0} competitors`, 'success');
-        showThreatProgress(true, '完成 · Done', 100);
+        toast(`判定已更新：${res?.competitorCount ?? 0} 个竞品`, 'success');
+        showThreatProgress(true, '完成', 100);
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
@@ -781,47 +1334,47 @@
               <td>${Math.round((s.threat_score || 0) * 100)}%</td>
               <td>${esc(statusText(s.status))}</td>
               <td>${esc(money(s.price))}${s.price_range ? ' · ' + esc(s.price_range) : ''}</td>
-              <td>${s.id ? `<button class="btn sm" data-open="${esc(s.id)}">详情 · Details</button>` : '—'}</td>
+              <td>${s.id ? `<button class="btn sm" data-open="${esc(s.id)}">详情</button>` : '—'}</td>
             </tr>`
         )
         .join('');
 
-      $('#modal-card').innerHTML = `
+      $('#modal-card').innerHTML = trHtml(`
         <div class="flex-between">
           <div>
-            <h2 style="font-size:18px">扫描详情 · Scan details</h2>
-            <p class="muted" style="margin-top:4px">${esc(fmtTime(h.started_at))} → ${esc(fmtTime(h.finished_at) || '进行中 · In progress')}</p>
+            <h2 style="font-size:18px">扫描详情</h2>
+            <p class="muted" style="margin-top:4px">${esc(fmtTime(h.started_at))} → ${esc(fmtTime(h.finished_at) || '进行中')}</p>
           </div>
           <div>
             <span class="chip ${h.status === 'done' ? 'green' : h.status === 'error' ? 'red' : 'blue'}">${esc(h.status)}</span>
-            ${h.trigger === 'loop' ? '<span class="chip purple">后台 Loop · Background Loop</span>' : '<span class="chip">手动 · Manual</span>'}
+            ${h.trigger === 'loop' ? '<span class="chip purple">后台 Loop</span>' : '<span class="chip">手动</span>'}
           </div>
         </div>
         <div class="kv section-gap">
-          <div class="k">基准产品 · Baseline product</div><div>${esc(h.product_name || h.details?.product || '—')}</div>
-          <div class="k">搜索意图 · Search intent</div><div>${esc(h.query || '—')}</div>
-          <div class="k">发现 Found / 新增 New / 高威胁 High threat</div>
+          <div class="k">基准产品</div><div>${esc(h.product_name || h.details?.product || '—')}</div>
+          <div class="k">搜索意图</div><div>${esc(h.query || '—')}</div>
+          <div class="k">发现 / 新增 / 高威胁</div>
           <div>${h.found_count ?? 0} / ${h.new_count ?? 0} / ${h.threat_count ?? 0}</div>
-          <div class="k">摘要 · Summary</div><div>${esc(h.summary || h.error || '—')}</div>
+          <div class="k">摘要</div><div>${esc(h.summary || h.error || '—')}</div>
         </div>
-        ${names ? `<h3 style="font-size:13px;margin:14px 0 8px">发现竞品 · Found competitors</h3><div>${names}</div>` : ''}
-        ${news ? `<h3 style="font-size:13px;margin:14px 0 8px">本轮新增 · New this run</h3><div>${news}</div>` : ''}
-        ${threats ? `<h3 style="font-size:13px;margin:14px 0 8px">高威胁 · High threat</h3>${threats}` : ''}
+        ${names ? `<h3 style="font-size:13px;margin:14px 0 8px">发现竞品</h3><div>${names}</div>` : ''}
+        ${news ? `<h3 style="font-size:13px;margin:14px 0 8px">本轮新增</h3><div>${news}</div>` : ''}
+        ${threats ? `<h3 style="font-size:13px;margin:14px 0 8px">高威胁</h3>${threats}` : ''}
         ${
           saved
-            ? `<h3 style="font-size:13px;margin:14px 0 8px">入库明细 · Saved items</h3>
+            ? `<h3 style="font-size:13px;margin:14px 0 8px">入库明细</h3>
           <div class="dim-table-wrap" style="border:none"><table class="table">
-            <thead><tr><th>名称</th><th>威胁</th><th>状态 · Status</th><th>价格 · Price</th><th></th></tr></thead>
+            <thead><tr><th>名称</th><th>威胁</th><th>状态</th><th>价格</th><th></th></tr></thead>
             <tbody>${saved}</tbody>
           </table></div>`
             : ''
         }
-        <h3 style="font-size:13px;margin:14px 0 8px">运行日志 · Run log (${(h.logs || []).length})</h3>
-        <div class="scan-log-box">${logs || '<p class="muted">无逐步日志（旧记录） · No step logs (legacy)</p>'}</div>
+        <h3 style="font-size:13px;margin:14px 0 8px">运行日志（${(h.logs || []).length}）</h3>
+        <div class="scan-log-box">${logs || '<p class="muted">无逐步日志（旧记录）</p>'}</div>
         <div class="flex-between section-gap">
-          <span class="muted" style="font-size:12px">后台扫描与手动扫描共用此详情 · Background & manual scans share this view</span>
-          <button class="btn primary" data-close-modal>关闭 · Close</button>
-        </div>`;
+          <span class="muted" style="font-size:12px">后台扫描与手动扫描共用此详情</span>
+          <button class="btn primary" data-close-modal>关闭</button>
+        </div>`);
       $('#modal').classList.remove('hidden');
       $$('[data-open]', $('#modal-card')).forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -838,15 +1391,15 @@
   function dimOptsHtml(selected) {
     const dims =
       (typeof window !== 'undefined' && window.ThreatVizDims) || [
-        { key: 'threat_score', label: '综合威胁 · Overall' },
-        { key: 'price', label: '价格竞争力 · Price' },
-        { key: 'category', label: '品类重合 · Category' },
-        { key: 'features', label: '规格/功能 · Features' },
-        { key: 'channels', label: '渠道重合 · Channels' },
-        { key: 'positioning', label: '定位相似 · Positioning' },
-        { key: 'price_edge', label: '价格压制 · Price pressure' },
-        { key: 'channel_edge', label: '渠道广度 · Channel breadth' },
-        { key: 'completeness', label: '情报完整度 · Intel completeness · Completeness' },
+        { key: 'threat_score', label: '综合威胁' },
+        { key: 'price', label: '价格竞争力' },
+        { key: 'category', label: '品类重合' },
+        { key: 'features', label: '规格/功能' },
+        { key: 'channels', label: '渠道重合' },
+        { key: 'positioning', label: '定位相似' },
+        { key: 'price_edge', label: '价格压制' },
+        { key: 'channel_edge', label: '渠道广度' },
+        { key: 'completeness', label: '情报完整度' },
       ];
     return dims
       .map(
@@ -871,9 +1424,9 @@
     if (!list.length) {
       return `
         <div class="card">
-          ${emptyState('◎', '竞品库是空的 · Competitor library is empty', '运行智能扫描，或手动添加 · Add manually第一家竞品 · Run Smart Scan or add manually', '去扫描 · Go scan', 'empty-to-scan')}
+          ${emptyState('◎', '竞品库是空的', '运行智能扫描，或手动添加第一家竞品', '去扫描', 'empty-to-scan')}
           <div style="text-align:center;margin-top:-8px;padding-bottom:24px">
-            <button class="btn" id="btn-add-manual">手动添加 · Add manually</button>
+            <button class="btn" id="btn-add-manual">手动添加</button>
           </div>
         </div>`;
     }
@@ -881,49 +1434,49 @@
     const view = state.compView || 'space';
     return `
       <div class="banner">
-        <span>判定 Scoring: BM25+RAG · <strong>对比表 Compare</strong>: param-by-param (does not change scores)</span>
+        <span>判定：BM25+RAG · <strong>对比表</strong>：规格<strong>参数逐项</strong>对齐（不改判定）</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn sm primary" id="btn-compare-matrix" title="按规格参数一条一条对比，不写回威胁判定 · Param compare; does not write scores">参数对比 · Compare表 · Param compare</button>
-          <button class="btn sm" id="btn-rag-rerank" title="按判定规则重算威胁分 · Rescore by rules">全库重算判定 · Rescore all</button>
+          <button class="btn sm primary" id="btn-compare-matrix" title="按规格参数一条一条对比，不写回威胁判定">参数对比表</button>
+          <button class="btn sm" id="btn-rag-rerank" title="按判定规则重算威胁分">全库重算判定</button>
         </div>
       </div>
       <div id="threat-progress-bar" class="threat-progress hidden">
         <div class="threat-progress-top">
-          <span id="threat-progress-text">待命 · Idle</span>
+          <span id="threat-progress-text">待命</span>
           <strong id="threat-progress-pct">0%</strong>
         </div>
         <div class="progress"><i id="threat-progress-fill"></i></div>
       </div>
       <div class="toolbar">
-        <input class="search" id="comp-search" type="text" placeholder="搜索名称 / 公司 / 描述… · Search name / company / description…" />
+        <input class="search" id="comp-search" type="text" placeholder="搜索名称 / 公司 / 描述…" />
         <select id="comp-status">
-          <option value="">全部状态 · All statuses</option>
-          <option value="pending">待人工确认 · Pending review</option>
-          <option value="confirmed">已确认 · Confirmed</option>
-          <option value="rejected">已忽略 · Dismissed</option>
+          <option value="">全部状态</option>
+          <option value="pending">待人工确认</option>
+          <option value="confirmed">已确认</option>
+          <option value="rejected">已忽略</option>
         </select>
         <select id="comp-threat">
-          <option value="">全部威胁 · All threats</option>
-          <option value="0.75">极高 Extreme ≥75%</option>
-          <option value="0.65">高威胁 High ≥65%</option>
-          <option value="0.4">中高 Mid-high ≥40%</option>
+          <option value="">全部威胁</option>
+          <option value="0.75">极高 ≥75%</option>
+          <option value="0.65">高威胁 ≥65%</option>
+          <option value="0.4">中高 ≥40%</option>
         </select>
         <select id="comp-method">
-          <option value="">全部方法 · All methods</option>
+          <option value="">全部方法</option>
           <option value="rag_bm25">RAG+BM25</option>
-          <option value="rules">仅规则 · Rules only</option>
-          <option value="rules_fallback">规则回退 · Rules fallback</option>
+          <option value="rules">仅规则</option>
+          <option value="rules_fallback">规则回退</option>
         </select>
         <div class="view-tabs" id="view-tabs">
-          <button type="button" data-view="space" class="${view === 'space' ? 'active' : ''}">空间图 · Space</button>
-          <button type="button" data-view="cards" class="${view === 'cards' ? 'active' : ''}">卡片 · Cards</button>
-          <button type="button" data-view="table" class="${view === 'table' ? 'active' : ''}">高维表 · Table</button>
-          <button type="button" data-view="compare" class="${view === 'compare' ? 'active' : ''}">参数对比 · Compare</button>
+          <button type="button" data-view="space" class="${view === 'space' ? 'active' : ''}">空间图</button>
+          <button type="button" data-view="cards" class="${view === 'cards' ? 'active' : ''}">卡片</button>
+          <button type="button" data-view="table" class="${view === 'table' ? 'active' : ''}">高维表</button>
+          <button type="button" data-view="compare" class="${view === 'compare' ? 'active' : ''}">参数对比</button>
         </div>
         <div class="spacer"></div>
-        <button class="btn" id="btn-export-csv">导出 · Export</button>
-        <button class="btn" id="btn-add-manual">手动添加 · Add manually</button>
-        <button class="btn primary" id="btn-goto-scan">去扫描 · Go scan</button>
+        <button class="btn" id="btn-export-csv">导出</button>
+        <button class="btn" id="btn-add-manual">手动添加</button>
+        <button class="btn primary" id="btn-goto-scan">去扫描</button>
       </div>
       <div id="comp-main" class="comp-layout">
         ${renderCompMain(list, view)}
@@ -946,26 +1499,26 @@
               <label id="viz-z-wrap">Z <select id="viz-z">${dimOptsHtml('channels')}</select></label>
             </div>
             <label class="muted" style="font-size:12px;display:flex;align-items:center;gap:6px">
-              空间基准 · Space baseline
+              空间基准
               <select id="viz-baseline" style="min-width:140px"></select>
             </label>
-            <span class="muted" style="font-size:11px;margin-left:auto">蓝钻 Blue=baseline · 青钻 Teal=other products · 球 Ball=competitors</span>
+            <span class="muted" style="font-size:11px;margin-left:auto">蓝钻=当前基准 · 青钻=其他我方产品 · 球=竞品</span>
           </div>
           <div class="viz-canvas-wrap" id="viz-canvas"></div>
           <div class="viz-legend">
-            <span><i class="swatch" style="background:#6b9bff"></i>当前基准 · Active baseline</span>
-            <span><i class="swatch" style="background:#2dd4bf"></i>其他我方 · Other ours</span>
-            <span><i class="swatch" style="background:#f43f5e"></i>高威胁连线 · High-threat links</span>
+            <span><i class="swatch" style="background:#6b9bff"></i>当前基准</span>
+            <span><i class="swatch" style="background:#2dd4bf"></i>其他我方</span>
+            <span><i class="swatch" style="background:#f43f5e"></i>高威胁连线</span>
             <span class="viz-grad"><span>低</span><i></i><span>高</span></span>
           </div>
-          <p class="viz-hint">拖拽旋转 · 滚轮缩放 · 点击查看详情 · Click for details · Drag to rotate, scroll to zoom. Multi-product: max threat; origin is <strong>active baseline</strong> — rescore after switch.</p>
+          <p class="viz-hint">拖拽旋转 · 滚轮缩放 · 点击球体/标签查看详情。多产品时威胁取最高分；空间以<strong>当前基准</strong>为原点，切换后建议「全库重算」。</p>
         </div>
         <div class="comp-grid" id="comp-cards-mini">
           ${list.slice(0, 6).map((c) => compCard(c)).join('')}
         </div>`;
     }
     if (view === 'cards') {
-      return `<div class="comp-grid" id="comp-cards">${list.map((c) => compCard(c)).join('') || '<p class="muted empty-hint">无匹配 · No matches</p>'}</div>`;
+      return `<div class="comp-grid" id="comp-cards">${list.map((c) => compCard(c)).join('') || '<p class="muted empty-hint">无匹配</p>'}</div>`;
     }
     if (view === 'compare') {
       return renderCompareMatrixHtml(state.compareMatrix);
@@ -976,26 +1529,26 @@
         <table class="table" id="dim-table">
           <thead>
             <tr>
-              <th>竞品 · Competitor</th>
-              <th>综合威胁 · Overall</th>
-              <th>价格 · Price</th>
-              <th>品类 · Category</th>
-              <th>规格 · Specs</th>
-              <th>渠道维 · Channels</th>
-              <th>定位 · Positioning</th>
-              <th>价格压制 · Price pressure</th>
-              <th>渠道广 · Channel reach</th>
-              <th>完整度 · Completeness</th>
-              <th>标价 · List price</th>
-              <th>销售渠道 · Sales channels</th>
-              <th>状态 · Status</th>
-              <th>操作 · Actions</th>
+              <th>竞品</th>
+              <th>综合威胁</th>
+              <th>价格</th>
+              <th>品类</th>
+              <th>规格</th>
+              <th>渠道维</th>
+              <th>定位</th>
+              <th>价格压制</th>
+              <th>渠道广</th>
+              <th>完整度</th>
+              <th>标价</th>
+              <th>销售渠道</th>
+              <th>状态</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody id="comp-tbody">${list.map((c) => dimRow(c)).join('')}</tbody>
         </table>
       </div>
-      <p class="muted" style="font-size:12px;margin-top:8px">高维（≥4）用表 · High-dim (≥4) table; use Space view for 1–3 dims.</p>`;
+      <p class="muted" style="font-size:12px;margin-top:8px">高维（≥4）用表呈现各维度分值；1–3 维请用「空间图」。</p>`;
   }
 
   /** 参数级对比表：规格/价格/品类/渠道 一条一条遍历（非判定标准） */
@@ -1004,37 +1557,37 @@
     if (matrix && matrix.dimMeta && matrix.type !== 'param-compare') {
       return `
         <div class="card compare-empty">
-          <h3 style="margin-bottom:8px">参数对比 · Compare表 · Param compare</h3>
-          <p class="muted" style="margin-bottom:14px">检测到旧版对比缓存 · Legacy compare cache — regenerate<strong>参数级</strong>对比表。</p>
-          <button class="btn primary" id="btn-run-compare">生成参数对比 · Compare表 · Param compare</button>
+          <h3 style="margin-bottom:8px">参数对比表</h3>
+          <p class="muted" style="margin-bottom:14px">检测到旧版对比缓存，请重新生成<strong>参数级</strong>对比表。</p>
+          <button class="btn primary" id="btn-run-compare">生成参数对比表</button>
         </div>`;
     }
 
     if (!matrix || !matrix.rows?.length) {
       return `
         <div class="card compare-empty">
-          <h3 style="margin-bottom:8px">参数对比 · Compare表 · Param compare</h3>
+          <h3 style="margin-bottom:8px">参数对比表</h3>
           <p class="muted" style="margin-bottom:14px;line-height:1.65">
-            对每个<strong>我方产品 · Our product × 竞品</strong>，把<strong>规格参数逐项</strong>对齐比较（含标价、品类、渠道）。
-            <br/>例如：平台、ATS、求职信… 一行一个参数，只做分析 (analysis only), 
-            <strong>不写入威胁判定分 · Does not write threat scores</strong>。
+            对每个<strong>我方产品 × 竞品</strong>，把<strong>规格参数逐项</strong>对齐比较（含标价、品类、渠道）。
+            <br/>例如：平台、ATS、求职信… 一行一个参数，只做分析，
+            <strong>不写入威胁判定分</strong>。
           </p>
-          <button class="btn primary" id="btn-run-compare">生成参数对比 · Compare表 · Param compare</button>
+          <button class="btn primary" id="btn-run-compare">生成参数对比表</button>
         </div>`;
     }
 
     const products = matrix.products || [];
     const productOpts = [
-      `<option value="">全部我方产品 · Our product · All our products</option>`,
+      `<option value="">全部我方产品</option>`,
       ...products.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`),
     ].join('');
 
     const statusOpts = [
-      ['', '全部状态 · All statuses'],
+      ['', '全部状态'],
       ['diff', '不同 / 数值差'],
-      ['same', '相同 · Same'],
-      ['ours_only', '仅我方有 · Ours only'],
-      ['theirs_only', '仅竞品有 · Theirs only'],
+      ['same', '相同'],
+      ['ours_only', '仅我方有'],
+      ['theirs_only', '仅竞品有'],
     ]
       .map(([v, l]) => `<option value="${v}">${l}</option>`)
       .join('');
@@ -1053,7 +1606,7 @@
           </td>
           <td>
             <strong>${esc(r.param)}</strong>
-            ${r.paramAlt ? `<div class="item-sub">竞品键 · Their key: ${esc(r.paramAlt)}</div>` : ''}
+            ${r.paramAlt ? `<div class="item-sub">竞品键：${esc(r.paramAlt)}</div>` : ''}
             ${r.group === 'base' ? '<span class="chip">基础</span>' : '<span class="chip purple">规格</span>'}
           </td>
           <td class="param-val" title="${esc(r.ourValue)}">${esc(r.ourValue || '—')}</td>
@@ -1066,35 +1619,35 @@
     return `
       <div class="card compare-toolbar">
         <div>
-          <h3 style="margin:0 0 4px">参数对比 · Compare · ${matrix.productCount || products.length} 我方 × ${matrix.competitorCount || 0} 竞品</h3>
+          <h3 style="margin:0 0 4px">参数对比 · ${matrix.productCount || products.length} 我方 × ${matrix.competitorCount || 0} 竞品</h3>
           <p class="muted" style="font-size:12px;margin:0">
             ${esc(fmtTime(matrix.updatedAt))} · 共 <strong>${matrix.paramRowCount || matrix.rows.length}</strong> 行参数 ·
-            <strong>不改威胁判定 · Does not change threat scores</strong>
+            <strong>不改威胁判定</strong>
           </p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <select id="compare-filter-product" style="min-width:140px">${productOpts}</select>
           <select id="compare-filter-status" style="min-width:120px">${statusOpts}</select>
-          <button class="btn sm" id="btn-run-compare">重新生成 · Regenerate</button>
+          <button class="btn sm" id="btn-run-compare">重新生成</button>
         </div>
       </div>
       <div class="dim-table-wrap compare-table-wrap">
         <table class="table compare-table param-compare-table" id="compare-table">
           <thead>
             <tr>
-              <th class="sticky-col">我方产品 · Our product</th>
-              <th>竞品 · Competitor</th>
-              <th>参数 · Param</th>
-              <th>我方值 · Ours</th>
-              <th>竞品值 · Theirs</th>
-              <th>对比 · Compare</th>
+              <th class="sticky-col">我方产品</th>
+              <th>竞品</th>
+              <th>参数</th>
+              <th>我方值</th>
+              <th>竞品值</th>
+              <th>对比</th>
             </tr>
           </thead>
           <tbody>${body}</tbody>
         </table>
       </div>
       <p class="muted" style="font-size:12px;margin-top:8px">
-        同名/近义参数名会自动对齐 · Same/similar param names auto-align（如「ATS 关键词评分」与「ATS_优化」需人工看值）。点击行打开竞品详情。
+        同名/近义参数名会自动对齐（如「ATS 关键词评分」与「ATS_优化」需人工看值）。点击行打开竞品详情。
       </p>`;
   }
 
@@ -1102,8 +1655,8 @@
     return (
       {
         rag_bm25: 'RAG+BM25',
-        rules: '规则 · Rules',
-        rules_fallback: '规则回退 · Rules fallback',
+        rules: '规则',
+        rules_fallback: '规则回退',
       }[m] || m || '—'
     );
   }
@@ -1128,7 +1681,7 @@
     const range = rangeRaw ? clampText(rangeRaw, 56) : '';
     const full = [main !== '—' ? main : '', rangeRaw].filter(Boolean).join(' · ') || '—';
     return `
-      <div class="k">价格 · Price</div>
+      <div class="k">价格</div>
       <div class="v" title="${esc(full)}">
         <span class="price-main">${esc(main)}</span>${
           range ? `<span class="price-range"> · ${esc(range)}</span>` : ''
@@ -1158,22 +1711,22 @@
         <div class="comp-card-meta">
           <div>${priceCardHtml(c)}</div>
           <div>
-            <div class="k">状态 · Status</div>
+            <div class="k">状态</div>
             <div class="v is-short"><span class="status-dot status-${esc(c.status)}"></span>${esc(statusText(c.status))}</div>
           </div>
           <div>
-            <div class="k">方法 · Method</div>
+            <div class="k">方法</div>
             <div class="v is-short" title="${esc(methodLabel(c.threat_method))}">${esc(methodLabel(c.threat_method))}</div>
           </div>
           <div>
-            <div class="k">价/规/渠 · P/S/C</div>
+            <div class="k">价/规/渠</div>
             <div class="v is-short">${dimPct(c, 'price')}/${dimPct(c, 'features')}/${dimPct(c, 'channels')}</div>
           </div>
         </div>
-        <div class="comp-card-channels">${channels || '<span class="muted">无渠道 · No channels</span>'}</div>
+        <div class="comp-card-channels">${channels || '<span class="muted">无渠道</span>'}</div>
         <div class="comp-card-actions" onclick="event.stopPropagation()">
-          <button class="btn sm" data-open="${esc(c.id)}">详情 · Details</button>
-          ${c.status === 'pending' ? `<button class="btn sm success" data-confirm="${esc(c.id)}">确认 · Confirm</button>` : ''}
+          <button class="btn sm" data-open="${esc(c.id)}">详情</button>
+          ${c.status === 'pending' ? `<button class="btn sm success" data-confirm="${esc(c.id)}">确认</button>` : ''}
           <button class="btn sm" data-verify="${esc(c.id)}">Agent</button>
         </div>
       </div>`;
@@ -1199,7 +1752,7 @@
         <td>${esc(money(c.price, c.price_unit))}</td>
         <td title="${esc(ch)}">${esc(ch || '—')}</td>
         <td>${esc(statusText(c.status))}</td>
-        <td><button class="btn sm" data-open="${esc(c.id)}">详情 · Details</button></td>
+        <td><button class="btn sm" data-open="${esc(c.id)}">详情</button></td>
       </tr>`;
   }
 
@@ -1209,7 +1762,7 @@
     if (!el) return;
     if (!window.ThreatViz) {
       el.innerHTML =
-        '<p class="muted empty-hint" style="padding:40px">Three.js 可视化加载中… · Loading… · Loading visualization… · Loading viz… switch view to retry</p>';
+        '<p class="muted empty-hint" style="padding:40px">Three.js 可视化加载中…请稍后切换视图重试</p>';
       setTimeout(() => {
         if (window.ThreatViz && state.page === 'competitors' && state.compView === 'space') {
           mountThreatViz(list);
@@ -1238,7 +1791,7 @@
                 `<option value="${esc(p.id)}" ${p.id === activeId ? 'selected' : ''}>${esc(p.name)}</option>`
             )
             .join('')
-        : '<option value="">未配置产品 · No product configured</option>';
+        : '<option value="">未配置产品</option>';
       sel.onchange = async () => {
         const id = sel.value;
         if (!id) return;
@@ -1246,7 +1799,7 @@
           await call(api.setActiveProduct(id));
           const next = products.find((p) => p.id === id);
           state.threatViz?.setProducts(products, id);
-          toast(`空间基准 · Space baseline：${next?.name || id}`, 'info');
+          toast(`空间基准：${next?.name || id}`, 'info');
         } catch (e) {
           toast(e.message, 'error');
         }
@@ -1270,7 +1823,7 @@
           await call(api.setActiveProduct(p.id));
           if (sel) sel.value = p.id;
           state.threatViz?.setProducts(products, p.id);
-          toast(`已切换基准 · Baseline set: ${p.name}`, 'success');
+          toast(`已切换基准：${p.name}`, 'success');
         } catch (e) {
           toast(e.message, 'error');
         }
@@ -1293,32 +1846,32 @@
     $('#btn-export-csv')?.addEventListener('click', async () => {
       try {
         const res = await call(api.exportCompetitors('csv'));
-        if (!res.canceled) toast(`已导出 · Exported ${res.count} rows`, 'success');
+        if (!res.canceled) toast(`已导出 ${res.count} 条`, 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
     });
     const runCompareMatrix = async () => {
       if (state.threatRunning) {
-        toast('任务进行中… · In progress… · Task in progress…', 'info');
+        toast('任务进行中…', 'info');
         return;
       }
       state.threatRunning = true;
-      showThreatProgress(true, '参数逐项对比中… · Comparing params…', 0);
+      showThreatProgress(true, '参数逐项对比中…', 0);
       try {
-        toast('正在按规格参数逐条对比… · Comparing params…', 'info');
+        toast('正在按规格参数逐条对比…', 'info');
         const matrix = await call(api.compareProductsMatrix());
         state.compareMatrix = matrix;
         state.compView = 'compare';
         toast(
-          `参数对比 · Compare完成：${matrix.paramRowCount || 0} 行（${matrix.productCount} 产品 × ${matrix.competitorCount} 竞品，未改判定）`,
+          `参数对比完成：${matrix.paramRowCount || 0} 行（${matrix.productCount} 产品 × ${matrix.competitorCount} 竞品，未改判定）`,
           'success'
         );
-        showThreatProgress(true, '完成 · Done', 100);
+        showThreatProgress(true, '完成', 100);
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
-        showThreatProgress(true, e.message || '失败 · Failed', state.threatLastPercent || 0);
+        showThreatProgress(true, e.message || '失败', state.threatLastPercent || 0);
       } finally {
         state.threatRunning = false;
         setTimeout(() => showThreatProgress(false), 2500);
@@ -1340,15 +1893,15 @@
     };
     const runRerank = async () => {
       if (state.threatRunning) {
-        toast('任务进行中… · In progress… · Task in progress…', 'info');
+        toast('任务进行中…', 'info');
         return;
       }
       state.threatRunning = true;
-      showThreatProgress(true, '全库重算判定 · Rescore all… · Rescoring all…', 0);
+      showThreatProgress(true, '全库重算判定…', 0);
       try {
         const res = await call(api.analyzeAllThreats());
-        toast(`判定已更新 · Updated: ${res?.competitorCount ?? 0} competitors`, 'success');
-        showThreatProgress(true, '完成 · Done', 100);
+        toast(`判定已更新：${res?.competitorCount ?? 0} 个竞品`, 'success');
+        showThreatProgress(true, '完成', 100);
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
@@ -1485,7 +2038,7 @@
       el.addEventListener('click', async () => {
         try {
           await call(api.confirmCompetitor(el.dataset.confirm));
-          toast('已确认 · Confirmed', 'success');
+          toast('已确认', 'success');
           renderPage();
         } catch (e) {
           toast(e.message, 'error');
@@ -1495,9 +2048,9 @@
     $$('[data-verify]').forEach((el) =>
       el.addEventListener('click', async () => {
         try {
-          toast('Agent 确认中… · Agent verifying…', 'info');
+          toast('Agent 确认中…', 'info');
           await call(api.verifyOne(el.dataset.verify));
-          toast('Agent 确认完成 · Agent verify done', 'success');
+          toast('Agent 确认完成', 'success');
           renderPage();
         } catch (e) {
           toast(e.message, 'error');
@@ -1507,21 +2060,21 @@
   }
 
   function showManualAdd() {
-    $('#modal-card').innerHTML = `
-      <h2 style="margin-bottom:16px;font-size:18px">手动添加 · Add manually竞品 · Add competitor manually</h2>
+    $('#modal-card').innerHTML = trHtml(`
+      <h2 style="margin-bottom:16px;font-size:18px">手动添加竞品</h2>
       <div class="grid form">
-        <div class="form-group"><label>名称 * · Name *</label><input id="m-name" type="text" placeholder="必填" /></div>
-        <div class="form-group"><label>公司 · Company</label><input id="m-company" type="text" /></div>
-        <div class="form-group"><label>价格 · Price</label><input id="m-price" type="number" min="0" /></div>
-        <div class="form-group"><label>品类 · Category</label><input id="m-category" type="text" /></div>
+        <div class="form-group"><label>名称 *</label><input id="m-name" type="text" placeholder="必填" /></div>
+        <div class="form-group"><label>公司</label><input id="m-company" type="text" /></div>
+        <div class="form-group"><label>价格</label><input id="m-price" type="number" min="0" /></div>
+        <div class="form-group"><label>品类</label><input id="m-category" type="text" /></div>
       </div>
-      <div class="form-group"><label>描述 · Description</label><textarea id="m-desc"></textarea></div>
-      <div class="form-group"><label>渠道（逗号分隔） · Channels (comma-separated)</label><input id="m-channels" type="text" placeholder="天猫, 京东, 官网 · Tmall, JD, site" /></div>
-      <div class="form-group"><label>规格 JSON · Specs JSON</label><textarea id="m-specs" placeholder='{"容量":"500ml"}'></textarea></div>
+      <div class="form-group"><label>描述</label><textarea id="m-desc"></textarea></div>
+      <div class="form-group"><label>渠道（逗号分隔）</label><input id="m-channels" type="text" placeholder="天猫, 京东, 官网" /></div>
+      <div class="form-group"><label>规格 JSON</label><textarea id="m-specs" placeholder='{"容量":"500ml"}'></textarea></div>
       <div class="flex-between section-gap">
-        <button class="btn" data-close-modal>取消 · Cancel</button>
-        <button class="btn primary" id="m-save">保存并评分 · Save & score</button>
-      </div>`;
+        <button class="btn" data-close-modal>取消</button>
+        <button class="btn primary" id="m-save">保存并评分</button>
+      </div>`);
     $('#modal').classList.remove('hidden');
     $('#m-save').onclick = async () => {
       try {
@@ -1541,7 +2094,7 @@
           })
         );
         closeModal();
-        toast('已添加 · Added', 'success');
+        toast('已添加', 'success');
         navigate('competitors');
       } catch (e) {
         toast(e.message, 'error');
@@ -1568,7 +2121,7 @@
       const specs = c.specs || {};
       const specsHtml =
         Object.keys(specs).length === 0
-          ? '<span class="muted">暂无规格 · No specs</span>'
+          ? '<span class="muted">暂无规格</span>'
           : Object.entries(specs)
               .map(([k, v]) => `<span class="chip blue">${esc(k)}: ${esc(v)}</span>`)
               .join('');
@@ -1591,9 +2144,9 @@
             </div>`
             )
             .join('')
-        : '<p class="muted empty-hint">暂无邻域证据 · No neighbor evidence yet</p>';
+        : '<p class="muted empty-hint">暂无邻域证据（库较小或尚未 RAG 重算）</p>';
 
-      $('#modal-card').innerHTML = `
+      $('#modal-card').innerHTML = trHtml(`
         <div class="flex-between">
           <div>
             <h2 style="font-size:20px">${esc(c.name)}</h2>
@@ -1609,32 +2162,32 @@
           </div>
         </div>
         <div class="kv section-gap">
-          <div class="k">价格 · Price</div><div>${esc(money(c.price, c.price_unit))} ${c.price_range ? `<span class="muted">(${esc(c.price_range)})</span>` : ''}</div>
-          <div class="k">状态 · Status</div><div><span class="status-dot status-${esc(c.status)}"></span>${esc(statusText(c.status))} <span class="muted">（人工 · Manual）</span></div>
+          <div class="k">价格</div><div>${esc(money(c.price, c.price_unit))} ${c.price_range ? `<span class="muted">(${esc(c.price_range)})</span>` : ''}</div>
+          <div class="k">状态</div><div><span class="status-dot status-${esc(c.status)}"></span>${esc(statusText(c.status))} <span class="muted">（人工）</span></div>
           <div class="k">自动判定</div><div>${esc(methodLabel(c.threat_method))}${c.rule_score != null ? ` · 规则基线 ${Math.round(c.rule_score * 100)}%` : ''}${c.rag_score != null ? ` · RAG ${Math.round(c.rag_score * 100)}%` : ''}</div>
-          <div class="k">官网 · Website</div><div>${c.website ? `<a class="linkish" data-url="${esc(c.website)}">${esc(c.website)}</a>` : '—'}</div>
+          <div class="k">官网</div><div>${c.website ? `<a class="linkish" data-url="${esc(c.website)}">${esc(c.website)}</a>` : '—'}</div>
           <div class="k">self BM25</div><div>${ev.selfBm25 != null ? esc(ev.selfBm25) : '—'}</div>
-          <div class="k">最近更新 · Updated</div><div>${esc(fmtTime(c.updated_at))}</div>
+          <div class="k">最近更新</div><div>${esc(fmtTime(c.updated_at))}</div>
         </div>
-        <p style="margin:12px 0;color:var(--text-secondary)">${esc(c.description || '暂无描述 · No description')}</p>
+        <p style="margin:12px 0;color:var(--text-secondary)">${esc(c.description || '暂无描述')}</p>
         <div class="card" style="padding:12px;margin-bottom:12px;background:var(--bg)">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">RAG 威胁结论 · RAG threat conclusion</div>
-          <div>${esc(c.threat_reason || '尚未自动判定 · Not scored yet')}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">RAG 威胁结论</div>
+          <div>${esc(c.threat_reason || '尚未自动判定')}</div>
           ${
             c.primary_product_name
-              ? `<div class="item-sub" style="margin-top:8px">最高威胁相对我方 · Highest threat vs ours: <strong>${esc(c.primary_product_name)}</strong></div>`
+              ? `<div class="item-sub" style="margin-top:8px">最高威胁相对我方：<strong>${esc(c.primary_product_name)}</strong></div>`
               : ''
           }
           ${
             Array.isArray(c.threat_vs) && c.threat_vs.length
               ? `<div class="threat-vs-list" style="margin-top:12px">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">判定参考 · Score reference (max = threat) · use Compare for detail</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">判定侧参考（取最高为威胁分）· 细致对比请用「对比表」</div>
                   ${c.threat_vs
                     .map(
                       (v) => `
                     <div class="threat-vs-row ${v.productId === c.primary_product_id ? 'is-primary' : ''}">
                       <div class="threat-vs-name">${esc(v.productName || '—')}${
-                        v.productId === c.primary_product_id ? ' <span class="chip blue">判定最高 · Top score</span>' : ''
+                        v.productId === c.primary_product_id ? ' <span class="chip blue">判定最高</span>' : ''
                       }</div>
                       <div class="threat-vs-score">${Math.round((v.score || 0) * 100)}%</div>
                       <div class="threat-vs-meta">${esc(methodLabel(v.method))}</div>
@@ -1645,27 +2198,27 @@
               : ''
           }
         </div>
-        <h3 style="margin:14px 0 8px;font-size:13px">BM25 检索证据 · BM25 evidence</h3>
+        <h3 style="margin:14px 0 8px;font-size:13px">BM25 检索证据</h3>
         ${evidenceHtml}
-        <h3 style="margin:14px 0 8px;font-size:13px">多维威胁画像 · Multi-dim threat profile</h3>
+        <h3 style="margin:14px 0 8px;font-size:13px">多维威胁画像</h3>
         ${dimHtml}
-        <h3 style="margin:16px 0 8px;font-size:13px">规格 · Specs</h3>
+        <h3 style="margin:16px 0 8px;font-size:13px">规格</h3>
         <div>${specsHtml}</div>
-        <h3 style="margin:16px 0 8px;font-size:13px">渠道 · Channels</h3>
+        <h3 style="margin:16px 0 8px;font-size:13px">渠道</h3>
         <div>${channels}</div>
-        ${c.notes ? `<h3 style="margin:16px 0 8px;font-size:13px">备注 / Agent · Notes / Agent</h3><div class="pre-box">${esc(c.notes)}</div>` : ''}
+        ${c.notes ? `<h3 style="margin:16px 0 8px;font-size:13px">备注 / Agent</h3><div class="pre-box">${esc(c.notes)}</div>` : ''}
         <div class="flex-between section-gap" style="margin-top:20px">
           <div class="row-actions">
-            <button class="btn sm danger" id="c-delete">删除 · Delete</button>
-            ${c.status === 'pending' ? '<button class="btn sm danger" id="c-reject">忽略 · Dismiss</button>' : ''}
+            <button class="btn sm danger" id="c-delete">删除</button>
+            ${c.status === 'pending' ? '<button class="btn sm danger" id="c-reject">忽略</button>' : ''}
           </div>
           <div class="row-actions">
-            <button class="btn" data-close-modal>关闭 · Close</button>
-            <button class="btn" id="c-verify">Agent 确认 · Agent verify</button>
-            <button class="btn" id="c-rescore" title="按判定规则重算威胁分 · Rescore by rules">重算判定 · Rescore</button>
-            ${c.status !== 'confirmed' ? '<button class="btn primary" id="c-confirm">人工确认入库 · Confirm to library</button>' : ''}
+            <button class="btn" data-close-modal>关闭</button>
+            <button class="btn" id="c-verify">Agent 确认</button>
+            <button class="btn" id="c-rescore" title="按判定规则重算威胁分">重算判定</button>
+            ${c.status !== 'confirmed' ? '<button class="btn primary" id="c-confirm">人工确认入库</button>' : ''}
           </div>
-        </div>`;
+        </div>`);
 
       $('#modal').classList.remove('hidden');
 
@@ -1675,28 +2228,28 @@
       });
       $('#c-confirm')?.addEventListener('click', async () => {
         await call(api.confirmCompetitor(id));
-        toast('已确认 · Confirmed入库 · Confirmed & saved', 'success');
+        toast('已确认入库', 'success');
         closeModal();
         renderPage();
       });
       $('#c-reject')?.addEventListener('click', async () => {
         await call(api.rejectCompetitor(id));
-        toast('已忽略 · Dismissed', 'info');
+        toast('已忽略', 'info');
         closeModal();
         renderPage();
       });
       $('#c-delete')?.addEventListener('click', async () => {
-        if (!confirm('确定删除 · Confirm delete该竞品？· Delete this competitor? Cannot be undone.')) return;
+        if (!confirm(t('确定删除该竞品？此操作不可撤销。'))) return;
         await call(api.deleteCompetitor(id));
-        toast('已删除 · Deleted', 'info');
+        toast('已删除', 'info');
         closeModal();
         renderPage();
       });
       $('#c-verify')?.addEventListener('click', async () => {
         try {
-          toast('Agent 确认中… · Agent verifying…', 'info');
+          toast('Agent 确认中…', 'info');
           await call(api.verifyOne(id));
-          toast('完成 · Done', 'success');
+          toast('完成', 'success');
           openCompetitor(id);
         } catch (e) {
           toast(e.message, 'error');
@@ -1704,15 +2257,15 @@
       });
       $('#c-rescore')?.addEventListener('click', async () => {
         if (state.threatRunning) {
-          toast('任务进行中… · In progress… · Task in progress…', 'info');
+          toast('任务进行中…', 'info');
           return;
         }
         state.threatRunning = true;
-        showThreatProgress(true, `重算判定 · Rescore · Rescoring 「${c.name}」…`, 0);
+        showThreatProgress(true, `重算判定「${c.name}」…`, 0);
         try {
           const result = await call(api.matchThreat(id));
           toast(
-            `判定已更新 · Updated ${Math.round((result.threatScore || 0) * 100)}% (vs ${result.primary_product_name || '—'})`,
+            `判定已更新 ${Math.round((result.threatScore || 0) * 100)}%（相对 ${result.primary_product_name || '—'}）`,
             'success'
           );
           openCompetitor(id);
@@ -1735,12 +2288,12 @@
 
   /** 扫描流水线指示灯：每灯对应不同阶段 */
   const SCAN_PIPELINE_STEPS = [
-    { id: 'start', label: '启动 · Start', hint: '初始化任务 · Init', color: 'cyan' },
-    { id: 'discover', label: '发现 · Discover', hint: 'Discover 研究候选 · Research candidates', color: 'violet' },
-    { id: 'enrich', label: '补全 · Enrich', hint: 'Enrich 价格/规格/渠道 · Price / specs / channels', color: 'amber' },
-    { id: 'threat', label: '威胁 · Threat', hint: 'BM25 + RAG 评分 · Scoring', color: 'rose' },
-    { id: 'verify', label: '校验 · Verify', hint: 'Agent 交叉确认 · Agent cross-check', color: 'teal' },
-    { id: 'done', label: '完成 · Done', hint: '入库待筛选 · Saved for review', color: 'lime' },
+    { id: 'start', label: '启动', hint: '初始化任务', color: 'cyan' },
+    { id: 'discover', label: '发现', hint: 'Discover 研究候选', color: 'violet' },
+    { id: 'enrich', label: '补全', hint: 'Enrich 价格/规格/渠道', color: 'amber' },
+    { id: 'threat', label: '威胁', hint: 'BM25 + RAG 评分', color: 'rose' },
+    { id: 'verify', label: '校验', hint: 'Agent 交叉确认', color: 'teal' },
+    { id: 'done', label: '完成', hint: '入库待筛选', color: 'lime' },
   ];
 
   function mapScanStageToStep(stage) {
@@ -1775,15 +2328,15 @@
       <div class="scan-pipeline idle" id="scan-pipeline" data-active="" data-status="idle">
         <div class="scan-pipeline-head">
           <div class="scan-pipeline-head-main">
-            <div class="scan-pipeline-title">流水线状态 · Pipeline status</div>
-            <div class="scan-pipeline-sub" id="scan-stage">就绪 · Ready — waiting to start scan</div>
+            <div class="scan-pipeline-title">流水线状态</div>
+            <div class="scan-pipeline-sub" id="scan-stage">就绪 · 等待发起扫描</div>
             <div class="scan-live-row">
               <span class="scan-live-dot" id="scan-live-dot" aria-hidden="true"></span>
-              <span class="scan-live-text" id="scan-live-text">待命 · Idle</span>
+              <span class="scan-live-text" id="scan-live-text">待命</span>
               <span class="scan-live-sep">·</span>
               <span class="scan-elapsed" id="scan-elapsed">0s</span>
               <span class="scan-live-sep">·</span>
-              <span class="scan-activity" id="scan-activity">尚未开始 · Not started</span>
+              <span class="scan-activity" id="scan-activity">尚未开始</span>
             </div>
           </div>
           <div class="scan-pipeline-pct"><span id="scan-pct-num">0</span>%</div>
@@ -1825,19 +2378,19 @@
       const live = $('#scan-live-text');
       const act = $('#scan-activity');
       if (quiet > 12000) {
-        if (live) live.textContent = '等待模型响应 · Waiting for model';
-        if (act) act.textContent = `仍在处理 · Still working · quiet ${formatElapsed(quiet)} (not stuck)`;
+        if (live) live.textContent = '等待模型响应';
+        if (act) act.textContent = `仍在处理 · 已静默 ${formatElapsed(quiet)}（非卡死）`;
         // 每 15s 写一条心跳日志
         if (now - (state.scanLastPulseAt || 0) >= 15000) {
           state.scanLastPulseAt = now;
           appendScanLog({
             level: 'pulse',
             stage: state.scanLastStage || 'discover',
-            message: `心跳 · Heartbeat: still running (${formatElapsed(now - state.scanStartedAt)})`,
+            message: `心跳：任务仍在进行，当前阶段等待中（已 ${formatElapsed(now - state.scanStartedAt)}）`,
           });
         }
       } else if (live) {
-        live.textContent = '运行中 · Running';
+        live.textContent = '运行中';
       }
     };
     tick();
@@ -1847,15 +2400,15 @@
   function stageBadge(stage) {
     const step = mapScanStageToStep(stage);
     const map = {
-      start: '启动 · Start',
-      discover: '发现 · Discover',
-      enrich: '补全 · Enrich',
-      threat: '威胁 · Threat',
-      verify: '校验 · Verify',
-      done: '完成 · Done',
-      error: '错误 · Error',
+      start: '启动',
+      discover: '发现',
+      enrich: '补全',
+      threat: '威胁',
+      verify: '校验',
+      done: '完成',
+      error: '错误',
     };
-    return map[step] || stage || '信息 · Info';
+    return t(map[step] || stage || '信息');
   }
 
   function appendScanLog({ level = 'info', stage = '', message = '' } = {}) {
@@ -1871,7 +2424,7 @@
     line.innerHTML = `
       <span class="scan-log-time">${esc(t)}</span>
       <span class="scan-log-badge stage-${esc(mapScanStageToStep(stage) || 'info')}">${esc(stageBadge(stage))}</span>
-      <span class="scan-log-msg" title="${esc(message)}">${esc(message)}</span>`;
+      <span class="scan-log-msg" title="${esc(t(message))}">${esc(t(message))}</span>`;
     box.appendChild(line);
     // 限制行数，避免 DOM 过大
     while (box.children.length > 200) box.removeChild(box.firstChild);
@@ -1895,9 +2448,10 @@
 
     if (message) {
       const stageEl = $('#scan-stage');
-      if (stageEl) stageEl.textContent = message;
+      const msgT = t(message);
+      if (stageEl) stageEl.textContent = msgT;
       const act = $('#scan-activity');
-      if (act) act.textContent = clampText(message, 72);
+      if (act) act.textContent = clampText(msgT, 72);
     }
 
     if (stepId === 'error') {
@@ -1905,7 +2459,7 @@
       root.classList.add('error');
       root.dataset.status = 'error';
       const live = $('#scan-live-text');
-      if (live) live.textContent = '失败 · Failed';
+      if (live) live.textContent = '失败';
       const active = root.dataset.active || 'start';
       $$('.scan-pipe-step', root).forEach((el) => {
         const id = el.dataset.step;
@@ -1926,7 +2480,7 @@
       root.classList.add('done');
       root.dataset.status = 'done';
       const live = $('#scan-live-text');
-      if (live) live.textContent = '已完成 · Done';
+      if (live) live.textContent = '已完成';
       $$('.scan-pipe-step', root).forEach((el) => {
         el.classList.remove('active', 'error');
         el.classList.add('done');
@@ -1938,7 +2492,7 @@
     root.classList.remove('done');
     root.dataset.status = 'running';
     const live = $('#scan-live-text');
-    if (live) live.textContent = '运行中 · Running';
+    if (live) live.textContent = '运行中';
     const idx = order.indexOf(stepId);
     $$('.scan-pipe-step', root).forEach((el) => {
       const id = el.dataset.step;
@@ -1962,13 +2516,13 @@
     const pct = $('#scan-pct-num');
     if (pct) pct.textContent = '0';
     const stageEl = $('#scan-stage');
-    if (stageEl) stageEl.textContent = '就绪 · Ready — waiting to start scan';
+    if (stageEl) stageEl.textContent = '就绪 · 等待发起扫描';
     const live = $('#scan-live-text');
-    if (live) live.textContent = '待命 · Idle';
+    if (live) live.textContent = '待命';
     const elapsed = $('#scan-elapsed');
     if (elapsed) elapsed.textContent = '0s';
     const act = $('#scan-activity');
-    if (act) act.textContent = '尚未开始 · Not started';
+    if (act) act.textContent = '尚未开始';
   }
 
   function pageScan() {
@@ -1977,8 +2531,8 @@
       ${
         !can
           ? `<div class="banner warn">
-              <span>扫描前需完成 LLM 与产品配置 · Complete LLM & product setup before scanning — ${esc(state.readiness?.next?.title || '')}</span>
-              <button class="btn sm" id="scan-fix-setup">去配置 · Configure</button>
+              <span>扫描前需完成 LLM 与产品配置 — ${esc(state.readiness?.next?.title || '')}</span>
+              <button class="btn sm" id="scan-fix-setup">去配置</button>
             </div>`
           : ''
       }
@@ -1987,14 +2541,14 @@
       </div>
       <div class="scan-layout">
         <div class="card scan-form-card">
-          <h3>发起扫描 · Start a scan</h3>
+          <h3>发起扫描</h3>
           <div class="form-group">
-            <label>搜索意图 · Search intent（可选）</label>
-            <textarea id="scan-query" placeholder="例如 e.g.：智能耳机 主动降噪 500元档 竞品 价格 渠道"></textarea>
-            <div class="hint">留空则根据「我的产品」自动生成 · Leave empty to auto-generate from My Products</div>
+            <label>搜索意图（可选）</label>
+            <textarea id="scan-query" placeholder="例如：智能耳机 主动降噪 500元档 竞品 价格 渠道"></textarea>
+            <div class="hint">留空则根据「我的产品」自动生成</div>
           </div>
           <div class="form-group">
-            <label>候选数量 · Candidate count</label>
+            <label>候选数量</label>
             <select id="scan-limit">
               <option value="5">5</option>
               <option value="8" selected>8</option>
@@ -2002,19 +2556,19 @@
             </select>
           </div>
           <div class="flex-between scan-form-actions">
-            <span class="muted" style="font-size:12px;line-height:1.4">判定 Scoring: BM25+RAG · param compare in Competitors → Compare</span>
+            <span class="muted" style="font-size:12px;line-height:1.4">判定用 BM25+RAG；逐产品细致对比请到竞品库「对比表」</span>
             <button class="btn primary" id="btn-run-scan" ${can ? '' : 'disabled'}>
-              <span class="btn-label">开始扫描 · Start scan</span>
+              <span class="btn-label">开始扫描</span>
             </button>
           </div>
         </div>
         <div class="card scan-log-card">
           <div class="scan-log-head">
-            <h3>运行日志 · Run log</h3>
+            <h3>运行日志</h3>
             <span class="muted" id="scan-log-count" style="font-size:12px">结构化 · 实时</span>
           </div>
           <div class="scan-console" id="scan-console">
-            <div class="scan-log-placeholder muted">等待扫描任务… · Waiting — stage changes & per-item logs appear here</div>
+            <div class="scan-log-placeholder muted">等待扫描任务…阶段切换与每条竞品处理都会写在这里</div>
           </div>
         </div>
       </div>`;
@@ -2027,7 +2581,7 @@
 
     // 若仍在扫描中切回本页，保持指示灯 running 态
     if (state.scanRunning) {
-      setScanPipeline(state.scanLastStage || 'start', state.scanLastMessage || '扫描进行中… · In progress… · Scan in progress…', state.scanLastPercent ?? 5);
+      setScanPipeline(state.scanLastStage || 'start', state.scanLastMessage || '扫描进行中…', state.scanLastPercent ?? 5);
       startScanHeartbeat();
     } else {
       resetScanPipeline();
@@ -2040,22 +2594,22 @@
       btn.disabled = true;
       btn.classList.add('is-loading');
       const label = btn.querySelector('.btn-label');
-      if (label) label.textContent = '扫描中… · Scanning…';
+      if (label) label.textContent = '扫描中…';
       resetScanPipeline();
       const box = $('#scan-console');
       if (box) box.innerHTML = '';
-      setScanPipeline('start', '启动中… · Starting…', 5);
+      setScanPipeline('start', '启动中…', 5);
       state.scanLastStage = 'start';
-      state.scanLastMessage = '启动中… · Starting…';
+      state.scanLastMessage = '启动中…';
       state.scanLastPercent = 5;
       startScanHeartbeat();
-      appendScanLog({ level: 'info', stage: 'start', message: '开始扫描 · Start scan任务 · Scan task started' });
+      appendScanLog({ level: 'info', stage: 'start', message: '开始扫描任务' });
 
       try {
         appendScanLog({
           level: 'info',
           stage: 'start',
-          message: '威胁判定 · Threat: baseline RAG + multi-product max (no param table here)',
+          message: '威胁判定：基准产品 RAG + 多产品取最高（对比表不在此生成）',
         });
         const res = await call(
           api.runScan({
@@ -2072,20 +2626,20 @@
           stage: 'done',
           message: `扫描完成：发现 ${res.found}，新增 ${res.newCount}，高威胁 ${res.newThreats?.length || 0} · 耗时 ${formatElapsed(Date.now() - state.scanStartedAt)}`,
         });
-        toast(`扫描完成 · Scan done, ${res.newCount} new competitors`, 'success');
+        toast(`扫描完成，新增 ${res.newCount} 个竞品`, 'success');
       } catch (e) {
-        setScanPipeline('error', e.message || '失败 · Failed', state.scanLastPercent);
-        appendScanLog({ level: 'err', stage: 'error', message: e.message || '扫描失败 · Scan failed' });
+        setScanPipeline('error', e.message || '失败', state.scanLastPercent);
+        appendScanLog({ level: 'err', stage: 'error', message: e.message || '扫描失败' });
         toast(e.message, 'error');
       } finally {
         state.scanRunning = false;
         stopScanHeartbeat();
         btn.disabled = !state.readiness?.canScan;
         btn.classList.remove('is-loading');
-        if (label) label.textContent = '开始扫描 · Start scan';
+        if (label) label.textContent = '开始扫描';
         const live = $('#scan-live-text');
-        if (live && state.scanLastStage === 'done') live.textContent = '已完成 · Done';
-        else if (live && state.scanLastStage === 'error') live.textContent = '失败 · Failed';
+        if (live && state.scanLastStage === 'done') live.textContent = '已完成';
+        else if (live && state.scanLastStage === 'error') live.textContent = '失败';
       }
     });
   }
@@ -2116,122 +2670,122 @@
         <div class="product-item ${item.id === activeId ? 'active' : ''}" data-edit-product="${esc(item.id)}">
           <div class="avatar">${esc(avatarText(item.name))}</div>
           <div class="meta">
-            <div class="name">${esc(item.name)} ${item.id === activeId ? '<span class="chip blue">当前基准 · Active baseline</span>' : ''}</div>
+            <div class="name">${esc(item.name)} ${item.id === activeId ? '<span class="chip blue">当前基准</span>' : ''}</div>
             <div class="sub">${esc(item.category || '未分类')} · ${esc(money(item.price))}</div>
           </div>
           <div class="row-actions" onclick="event.stopPropagation()">
             ${
               item.id !== activeId
-                ? `<button class="btn sm" data-activate="${esc(item.id)}">设为基准 · Set baseline</button>`
+                ? `<button class="btn sm" data-activate="${esc(item.id)}">设为基准</button>`
                 : ''
             }
-            <button class="btn sm" data-edit-product="${esc(item.id)}">编辑 · Edit</button>
-            <button class="btn sm danger" data-del-product="${esc(item.id)}">删除 · Delete</button>
+            <button class="btn sm" data-edit-product="${esc(item.id)}">编辑</button>
+            <button class="btn sm danger" data-del-product="${esc(item.id)}">删除</button>
           </div>
         </div>`
           )
           .join('')
-      : '<p class="muted empty-hint">还没有产品 · No products yet — add the first below</p>';
+      : '<p class="muted empty-hint">还没有产品，请在下方添加第一个</p>';
 
     return `
       <div class="banner">
-        <span>支持上传规格书 · Spec sheet · Upload specs → AI extract → <strong>逐项人工确认</strong> 后再写入产品</span>
-        <button class="btn sm primary" id="btn-upload-spec">选择文件 · Choose files</button>
+        <span>支持上传规格书（PDF / Word / Excel / TXT…）→ AI 抽取 → <strong>逐项人工确认</strong> 后再写入产品</span>
+        <button class="btn sm primary" id="btn-upload-spec">选择文件</button>
       </div>
       <div
         class="drop-zone"
         id="spec-drop-zone"
         tabindex="0"
         role="button"
-        aria-label="拖拽或点击上传 · Click to upload规格书 · Spec sheet · Drag or click to upload specs"
+        aria-label="拖拽或点击上传规格书"
       >
         <div class="drop-zone-inner">
           <div class="drop-zone-icon">📄</div>
-          <div class="drop-zone-title">拖拽规格书 · Spec sheet到这里</div>
-          <div class="drop-zone-sub">或点击上传 · Click to upload · multi-file PDF/Word/Excel/TXT/MD/CSV/JSON</div>
+          <div class="drop-zone-title">拖拽规格书到这里</div>
+          <div class="drop-zone-sub">或点击此区域 /「选择文件」· 支持多文件 · PDF / Word / Excel / TXT / MD / CSV / JSON</div>
         </div>
       </div>
       <div class="grid two section-gap" style="align-items:start">
         <div class="card">
           <h3>
-            产品组合 · Product portfolio
-            <button class="btn sm primary" id="btn-new-product">+ 添加产品 · Add product</button>
+            产品组合
+            <button class="btn sm primary" id="btn-new-product">+ 添加产品</button>
           </h3>
           <p class="muted" style="margin-bottom:12px;font-size:12px">
-            可配置多个己方产品。扫描与威胁自动取<strong>对全部产品</strong>的最高威胁；空间图 · Space以「当前基准 · Active baseline」为原点。
+            可配置多个己方产品。扫描与威胁自动取<strong>对全部产品</strong>的最高威胁；空间图以「当前基准」为原点。
           </p>
           <div class="product-list" id="product-list">${listHtml}</div>
         </div>
         <div class="card">
-          <h3 id="product-form-title">${p.id ? '编辑 · Edit产品 · Edit product' : '新建产品 · New product'}</h3>
+          <h3 id="product-form-title">${p.id ? '编辑产品' : '新建产品'}</h3>
           <input type="hidden" id="p-id" value="${esc(p.id || '')}" />
           <div class="grid form">
             <div class="form-group">
-              <label>产品名称 * · Product name *</label>
-              <input id="p-name" type="text" value="${esc(p.name || '')}" placeholder="例如 e.g.：Aura 降噪耳机 Pro" />
+              <label>产品名称 *</label>
+              <input id="p-name" type="text" value="${esc(p.name || '')}" placeholder="例如：Aura 降噪耳机 Pro" />
             </div>
             <div class="form-group">
-              <label>品类 · Category</label>
-              <input id="p-category" type="text" value="${esc(p.category || '')}" placeholder="消费电子 / consumer electronics / 无线耳机" />
+              <label>品类</label>
+              <input id="p-category" type="text" value="${esc(p.category || '')}" placeholder="消费电子 / 无线耳机" />
             </div>
             <div class="form-group">
-              <label>标价 · List price</label>
+              <label>标价</label>
               <input id="p-price" type="number" min="0" value="${p.price ?? ''}" placeholder="999" />
             </div>
             <div class="form-group">
-              <label>关键词（逗号分隔） · Keywords (comma-separated)</label>
-              <input id="p-keywords" type="text" value="${esc((p.keywords || []).join(', '))}" placeholder="ANC, 长续航 / long battery" />
+              <label>关键词（逗号分隔）</label>
+              <input id="p-keywords" type="text" value="${esc((p.keywords || []).join(', '))}" placeholder="ANC, 长续航" />
             </div>
           </div>
           <div class="form-group">
-            <label>产品描述 · Description</label>
-            <textarea id="p-desc" placeholder="核心卖点、目标用户、差异化 · Differentiation…">${esc(p.description || '')}</textarea>
+            <label>产品描述</label>
+            <textarea id="p-desc" placeholder="核心卖点、目标用户、差异化…">${esc(p.description || '')}</textarea>
           </div>
           <div class="form-group">
-            <label>销售渠道（逗号分隔） · Sales channels (comma-separated)</label>
-            <input id="p-channels" type="text" value="${esc((p.channels || []).map((c) => (typeof c === 'string' ? c : c.name)).join(', '))}" placeholder="天猫, 京东, 官网 · Tmall, JD, site" />
+            <label>销售渠道（逗号分隔）</label>
+            <input id="p-channels" type="text" value="${esc((p.channels || []).map((c) => (typeof c === 'string' ? c : c.name)).join(', '))}" placeholder="天猫, 京东, 官网" />
           </div>
           <div class="form-group">
-            <label>规格 JSON · Specs JSON</label>
+            <label>规格 JSON</label>
             <textarea id="p-specs" style="min-height:100px;font-family:var(--mono)" placeholder='{"降噪":"混合ANC"}'>${esc(specsStr)}</textarea>
           </div>
           <div class="flex-between">
             <span class="muted" id="p-save-msg"></span>
             <div class="row-actions">
-              <button class="btn" id="btn-clear-form">清空表单 · Clear form</button>
-              <button class="btn primary" id="btn-save-product">${p.id ? '保存修改 · Save' : '添加产品 · Add product'}</button>
+              <button class="btn" id="btn-clear-form">清空表单</button>
+              <button class="btn primary" id="btn-save-product">${p.id ? '保存修改' : '添加产品'}</button>
             </div>
           </div>
         </div>
       </div>
       <div id="spec-parse-panel" class="card section-gap hidden">
         <div class="flex-between">
-          <h3 style="margin:0">规格书 · Spec sheet解析 · Spec parse · confirm manually</h3>
-          <button class="btn sm" id="btn-close-parse">收起 · Collapse</button>
+          <h3 style="margin:0">规格书解析 · 人工确认</h3>
+          <button class="btn sm" id="btn-close-parse">收起</button>
         </div>
-        <p class="muted" style="font-size:12px;margin:8px 0 12px" id="spec-parse-status">等待上传… · Waiting for upload…</p>
+        <p class="muted" style="font-size:12px;margin:8px 0 12px" id="spec-parse-status">等待上传…</p>
         <div id="spec-parse-sources" class="spec-sources"></div>
         <div id="spec-parse-notes" class="muted" style="font-size:12px;margin:8px 0"></div>
         <div class="flex-between" style="margin:10px 0">
           <div class="row-actions">
-            <button class="btn sm" id="btn-spec-all">全选 · Select all</button>
-            <button class="btn sm" id="btn-spec-none">全不选 · Clear all</button>
-            <button class="btn sm" id="btn-spec-high">仅高置信(≥70%) · High confidence only (≥70%)</button>
+            <button class="btn sm" id="btn-spec-all">全选</button>
+            <button class="btn sm" id="btn-spec-none">全不选</button>
+            <button class="btn sm" id="btn-spec-high">仅高置信(≥70%)</button>
           </div>
           <span class="muted" style="font-size:12px" id="spec-parse-count"></span>
         </div>
         <div id="spec-field-list" class="spec-field-list"></div>
         <div class="flex-between section-gap">
           <label class="muted" style="font-size:12px;display:flex;align-items:center;gap:8px">
-            <input type="checkbox" id="spec-as-new" /> 导入为<strong>新产品</strong>（不勾选则合并到当前编辑 · Edit产品 · Edit product）
+            <input type="checkbox" id="spec-as-new" /> 导入为<strong>新产品</strong>（不勾选则合并到当前编辑产品）
           </label>
           <div class="row-actions">
-            <button class="btn" id="btn-spec-to-form">仅填入表单 · Fill form</button>
-            <button class="btn primary" id="btn-spec-apply">确认写入产品 · Confirm write to product</button>
+            <button class="btn" id="btn-spec-to-form">仅填入表单</button>
+            <button class="btn primary" id="btn-spec-apply">确认写入产品</button>
           </div>
         </div>
         <details class="section-gap">
-          <summary class="muted" style="cursor:pointer;font-size:12px">原文预览 · Source preview</summary>
+          <summary class="muted" style="cursor:pointer;font-size:12px">原文预览</summary>
           <pre class="pre-box" id="spec-preview" style="margin-top:8px;max-height:160px"></pre>
         </details>
       </div>`;
@@ -2248,7 +2802,7 @@
     const list = $('#spec-field-list');
     if (!list) return;
     if (!fields?.length) {
-      list.innerHTML = '<p class="muted empty-hint">未抽取出可用字段 · No usable fields extracted</p>';
+      list.innerHTML = '<p class="muted empty-hint">未抽取出可用字段</p>';
       return;
     }
     const basic = fields.filter((f) => f.group !== 'specs');
@@ -2275,7 +2829,7 @@
             .join('')}
         </div>`;
     };
-    list.innerHTML = block('基础信息 · Basics', basic) + block('规格参数 · Specs', specs);
+    list.innerHTML = block('基础信息', basic) + block('规格参数', specs);
     const n = fields.filter((f) => f.selected).length;
     const el = $('#spec-parse-count');
     if (el) el.textContent = `已选 ${n} / ${fields.length} 项`;
@@ -2309,15 +2863,15 @@
     if ($('#spec-parse-sources')) $('#spec-parse-sources').innerHTML = src || '';
     if ($('#spec-parse-notes')) {
       $('#spec-parse-notes').textContent = result.notes
-        ? `抽取说明 · Extract notes: ${result.notes}`
+        ? `抽取说明: ${result.notes}`
         : result.truncated
-          ? '正文过长已截断后解析 · Truncated long body before parse'
+          ? '正文过长已截断后解析'
           : '';
     }
     if ($('#spec-parse-status')) {
       const conf =
         result.confidence != null ? ` · 总体置信 ${Math.round(result.confidence * 100)}%` : '';
-      $('#spec-parse-status').textContent = `解析完成 · Parsed — select fields to import${conf}`;
+      $('#spec-parse-status').textContent = `解析完成，请勾选要导入的信息${conf}`;
     }
     if ($('#spec-preview')) $('#spec-preview').textContent = result.preview || '';
     renderSpecFields(result.fields || []);
@@ -2374,8 +2928,8 @@
       $('#p-channels').value = '';
       $('#p-specs').value = '';
       const t = $('#product-form-title');
-      if (t) t.textContent = '新建产品 · New product';
-      toast('填写后点击添加产品 · Fill in then click Add product', 'info');
+      if (t) t.textContent = '新建产品';
+      toast('填写后点击添加产品', 'info');
     });
 
     $('#btn-clear-form')?.addEventListener('click', () => {
@@ -2395,7 +2949,7 @@
         try {
           const res = await call(api.setActiveProduct(el.dataset.activate));
           if (res.readiness) setReadiness(res.readiness);
-          toast('已设为当前基准 · Active baseline', 'success');
+          toast('已设为当前基准', 'success');
           reload();
         } catch (err) {
           toast(err.message, 'error');
@@ -2406,12 +2960,12 @@
     $$('[data-del-product]').forEach((el) => {
       el.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!confirm('确定删除 · Confirm delete该产品？· Delete this product?')) return;
+        if (!confirm(t('确定删除该产品？'))) return;
         try {
           const res = await call(api.deleteProduct(el.dataset.delProduct));
           if (res.readiness) setReadiness(res.readiness);
           state.editingProductId = res.active?.id || null;
-          toast('已删除 · Deleted', 'info');
+          toast('已删除', 'info');
           reload();
         } catch (err) {
           toast(err.message, 'error');
@@ -2439,15 +2993,15 @@
         if (res.readiness) setReadiness(res.readiness);
         state.editingProductId =
           res.active?.id || res.products?.[res.products.length - 1]?.id || null;
-        $('#p-save-msg').textContent = '已保存 · Saved';
-        toast(id ? '产品已更新 · Product updated' : '产品已添加 · Added', 'success');
+        $('#p-save-msg').textContent = '已保存';
+        toast(id ? '产品已更新' : '产品已添加', 'success');
         reload();
       } catch (e) {
         toast(e.message, 'error');
       }
     });
 
-    // ---- 规格书 · Spec sheet上传（选择文件 · Choose files + 拖拽） ----
+    // ---- 规格书上传（选择文件 + 拖拽） ----
     const unsub =
       api.on &&
       api.on('product:parse-progress', (p) => {
@@ -2460,26 +3014,26 @@
       if (panel) panel.classList.remove('hidden');
       const status = $('#spec-parse-status');
       if (status) {
-        status.textContent = input == null ? '请选择文件 · Choose files…' : '正在读取拖入文件… · Reading dropped files…';
+        status.textContent = input == null ? '请选择文件…' : '正在读取拖入文件…';
       }
       const zone = $('#spec-drop-zone');
       zone?.classList.add('busy');
       try {
-        if (input == null) toast('请选择规格书 · Spec sheet文件… · Choose spec files…', 'info');
-        else toast(`正在解析 · Parsing ${Array.isArray(input) ? input.length : 1} file(s)…`, 'info');
+        if (input == null) toast('请选择规格书文件…', 'info');
+        else toast(`正在解析 ${Array.isArray(input) ? input.length : 1} 个文件…`, 'info');
         const res = await call(api.parseSpecFiles(input));
         if (res?.error && res.canceled) {
           throw new Error(res.error);
         }
         if (res.canceled) {
-          if (status) status.textContent = '已取消 · Canceled';
+          if (status) status.textContent = '已取消';
           return;
         }
         showSpecParseResult(res);
-        toast(`解析完成 · Parsed ${res.fields?.length || 0} fields pending`, 'success');
+        toast(`解析完成，共 ${res.fields?.length || 0} 项待确认`, 'success');
       } catch (e) {
         toast(e.message, 'error');
-        if (status) status.textContent = '失败 · Failed: ' + e.message;
+        if (status) status.textContent = '失败: ' + e.message;
       } finally {
         zone?.classList.remove('busy', 'drag-over');
       }
@@ -2510,7 +3064,7 @@
         setOver(false);
         const files = e.dataTransfer?.files;
         if (!files?.length) {
-          toast('未检测到文件 · No file detected', 'error');
+          toast('未检测到文件', 'error');
           return;
         }
         runSpecParse(Array.from(files));
@@ -2552,17 +3106,17 @@
 
     $('#btn-spec-to-form')?.addEventListener('click', () => {
       if (!state.specParse?.fields?.some((f) => f.selected)) {
-        toast('请先勾选要填入的字段 · Select fields to fill first', 'error');
+        toast('请先勾选要填入的字段', 'error');
         return;
       }
       fieldsToForm(state.specParse.fields);
-      toast('已填入表单 · Fill form · Filled into form — review then save', 'success');
+      toast('已填入表单，请检查后点保存', 'success');
       $('#product-form-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     $('#btn-spec-apply')?.addEventListener('click', async () => {
       if (!state.specParse?.fields?.some((f) => f.selected)) {
-        toast('请先勾选要写入的字段 · Select fields to write first', 'error');
+        toast('请先勾选要写入的字段', 'error');
         return;
       }
       try {
@@ -2578,7 +3132,7 @@
         );
         if (res.readiness) setReadiness(res.readiness);
         state.editingProductId = res.active?.id || productId;
-        toast(asNew ? '已创建新产品 · Created new product' : '已合并到产品 · Merged into product', 'success');
+        toast(asNew ? '已创建新产品' : '已合并到产品', 'success');
         reload();
       } catch (e) {
         toast(e.message, 'error');
@@ -2600,16 +3154,16 @@
 
     return `
       <div class="banner">
-        <span>基于我方 + 高威胁竞品 · High-threat rivals · AI simulates an actionable roadmap to win</span>
+        <span>基于我方产品 + 高威胁竞品，AI 模拟「要赢该做成什么样」的可执行 Roadmap</span>
       </div>
       <div class="grid two" style="align-items:start">
         <div class="card">
-          <h3>生成击败路径 · Generate beat path</h3>
+          <h3>生成击败路径</h3>
           <p class="muted" style="font-size:12px;margin-bottom:12px;line-height:1.6">
-            将综合威胁分、价格/规格/渠道差距，推演近中远三期路线：打谁、补什么、差异化 · Differentiation什么、价格与渠道怎么走。
+            将综合威胁分、价格/规格/渠道差距，推演近中远三期路线：打谁、补什么、差异化什么、价格与渠道怎么走。
           </p>
           <div class="form-group">
-            <label>主打产品（聚焦） · Focus product</label>
+            <label>主打产品（聚焦）</label>
             <select id="rm-focus">
               ${
                 plist.length
@@ -2619,38 +3173,38 @@
                           `<option value="${esc(p.id)}" ${p.id === focusId ? 'selected' : ''}>${esc(p.name)}</option>`
                       )
                       .join('')
-                  : '<option value="">请先添加产品 · Add a product first</option>'
+                  : '<option value="">请先添加产品</option>'
               }
             </select>
           </div>
           <div class="form-group">
-            <label>时间跨度 · Horizon</label>
+            <label>时间跨度</label>
             <select id="rm-horizon">
-              <option value="6m">6 个月 · 6 months</option>
-              <option value="12m" selected>12 个月 · 12 months</option>
-              <option value="18m">18 个月 · 18 months</option>
+              <option value="6m">6 个月</option>
+              <option value="12m" selected>12 个月</option>
+              <option value="18m">18 个月</option>
             </select>
           </div>
           <div class="form-group">
-            <label>战略目标（可选） · Strategic goal (optional)</label>
-            <textarea id="rm-goal" placeholder="例如 e.g.：在 999 价位段拿下…击败 Verifone / PAX">${esc(
+            <label>战略目标（可选）</label>
+            <textarea id="rm-goal" placeholder="例如：在 999 价位段拿下商超扫码支付机份额第一，击败 Verifone / PAX">${esc(
               latest?.meta?.goal || ''
             )}</textarea>
           </div>
           <div class="flex-between">
-            <span class="muted" id="rm-status">${latest ? `上次生成 · Last: ${esc(fmtTime(latest.meta?.generatedAt || latest.created_at))}` : '尚未生成'}</span>
-            <button class="btn primary" id="btn-gen-roadmap" ${plist.length ? '' : 'disabled'}>AI 生成路线图 · Generate roadmap · Generate AI roadmap</button>
+            <span class="muted" id="rm-status">${latest ? `上次生成：${esc(fmtTime(latest.meta?.generatedAt || latest.created_at))}` : '尚未生成'}</span>
+            <button class="btn primary" id="btn-gen-roadmap" ${plist.length ? '' : 'disabled'}>AI 生成路线图</button>
           </div>
           ${
             history?.length
               ? `<div class="section-gap">
-                  <h3 style="font-size:13px">历史版本 · History</h3>
+                  <h3 style="font-size:13px">历史版本</h3>
                   <div class="rm-history">
                     ${history
                       .map(
                         (h) => `
                       <button class="rm-hist-item" data-rm-id="${esc(h.id)}">
-                        <span class="t">${esc(h.title || '未命名 · Untitled')}</span>
+                        <span class="t">${esc(h.title || '未命名')}</span>
                         <span class="s">${esc(fmtTime(h.meta?.generatedAt || h.created_at))}</span>
                       </button>`
                       )
@@ -2661,16 +3215,16 @@
           }
         </div>
         <div class="card">
-          <h3>使用建议 · Tips</h3>
+          <h3>使用建议</h3>
           <div class="check-list">
-            <div class="check-item done"><div class="check-box">1</div><div class="check-body"><div class="check-title">先配齐产品与竞品 · Set up products & competitors first</div><div class="check-hint">威胁分越高越有的放矢 · Higher threat scores → sharper roadmap</div></div></div>
-            <div class="check-item done"><div class="check-box">2</div><div class="check-body"><div class="check-title">选定主打产品 · Pick focus product</div><div class="check-hint">组合产品时以一个 SKU 为主战场 · One focus SKU for multi-product</div></div></div>
-            <div class="check-item done"><div class="check-box">3</div><div class="check-body"><div class="check-title">生成后人工裁剪 · Human edit after generate</div><div class="check-hint">AI 给路径 · AI suggests; you decide</div></div></div>
+            <div class="check-item done"><div class="check-box">1</div><div class="check-body"><div class="check-title">先配齐产品与竞品</div><div class="check-hint">威胁分越高，路线图越有的放矢</div></div></div>
+            <div class="check-item done"><div class="check-box">2</div><div class="check-body"><div class="check-title">选定主打产品</div><div class="check-hint">组合产品时以一个 SKU 为主战场</div></div></div>
+            <div class="check-item done"><div class="check-box">3</div><div class="check-body"><div class="check-title">生成后人工裁剪</div><div class="check-hint">AI 给模拟路径，最终拍板仍是你</div></div></div>
           </div>
         </div>
       </div>
       <div id="rm-result" class="section-gap">
-        ${latest ? renderRoadmapDoc(latest) : emptyState('⇢', '还没有击败路径', '配置产品与竞品后生成 AI 路线图 · After products & competitors, generate AI roadmap', null, null)}
+        ${latest ? renderRoadmapDoc(latest) : emptyState('⇢', '还没有击败路径', '配置产品与竞品后，点击生成 AI 路线图', null, null)}
       </div>`;
   }
 
@@ -2695,15 +3249,15 @@
         <div class="rm-phase-head">
           <span class="rm-step">${i + 1}</span>
           <div>
-            <div class="rm-phase-name">${esc(ph.name || `阶段 Phase ${i + 1}`)}</div>
+            <div class="rm-phase-name">${esc(ph.name || `阶段 ${i + 1}`)}</div>
             <div class="rm-phase-theme">${esc(ph.theme || '')}</div>
           </div>
         </div>
         <div class="rm-phase-body">
-          <div class="rm-block"><h4>目标 · Goals</h4><ul>${(ph.goals || []).map((g) => `<li>${esc(g)}</li>`).join('') || '<li class="muted">—</li>'}</ul></div>
+          <div class="rm-block"><h4>目标</h4><ul>${(ph.goals || []).map((g) => `<li>${esc(g)}</li>`).join('') || '<li class="muted">—</li>'}</ul></div>
           <div class="rm-block"><h4>交付 / 功能</h4><ul>${(ph.deliverables || []).map((g) => `<li>${esc(g)}</li>`).join('') || '<li class="muted">—</li>'}</ul></div>
-          <div class="rm-block"><h4>指标 · Metrics</h4><ul>${(ph.metrics || []).map((g) => `<li>${esc(g)}</li>`).join('') || '<li class="muted">—</li>'}</ul></div>
-          ${(ph.risks || []).length ? `<div class="rm-block"><h4>风险 · Risks</h4><ul>${ph.risks.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></div>` : ''}
+          <div class="rm-block"><h4>指标</h4><ul>${(ph.metrics || []).map((g) => `<li>${esc(g)}</li>`).join('') || '<li class="muted">—</li>'}</ul></div>
+          ${(ph.risks || []).length ? `<div class="rm-block"><h4>风险</h4><ul>${ph.risks.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></div>` : ''}
         </div>
       </div>`
       )
@@ -2731,7 +3285,7 @@
           <span class="threat-pill ${threatClass(b.threatScore || 0)}">${Math.round((b.threatScore || 0) * 100)}%</span>
         </div>
         <p class="item-sub" style="margin-top:8px;white-space:normal">${esc(b.howToBeat || '')}</p>
-        ${b.avoidCopying ? `<p class="muted" style="font-size:12px;margin-top:6px">别盲目抄 · Don't blindly copy: ${esc(b.avoidCopying)}</p>` : ''}
+        ${b.avoidCopying ? `<p class="muted" style="font-size:12px;margin-top:6px">别盲目抄：${esc(b.avoidCopying)}</p>` : ''}
       </div>`
       )
       .join('');
@@ -2746,7 +3300,7 @@
     const diff = (doc.differentiators || [])
       .map(
         (m) =>
-          `<div class="rm-pill"><span class="chip green">${esc(m.moat || '差异 · Diff')}</span> <strong>${esc(m.name)}</strong><span class="muted"> — ${esc(m.reason || '')}</span></div>`
+          `<div class="rm-pill"><span class="chip green">${esc(m.moat || '差异')}</span> <strong>${esc(m.name)}</strong><span class="muted"> — ${esc(m.reason || '')}</span></div>`
       )
       .join('');
 
@@ -2778,15 +3332,15 @@
         <div class="rm-hero">
           <div>
             <div class="rm-kicker">AI 模拟击败路径 · 置信 ${conf}%</div>
-            <h2 class="rm-title">${esc(doc.title || '击败路径 · Beat roadmap')}</h2>
+            <h2 class="rm-title">${esc(doc.title || '击败路径')}</h2>
             <p class="rm-summary">${esc(doc.summary || '')}</p>
-            ${doc.northStar ? `<div class="rm-north"><span>北极星 · North star</span>${esc(doc.northStar)}</div>` : ''}
+            ${doc.northStar ? `<div class="rm-north"><span>北极星</span>${esc(doc.northStar)}</div>` : ''}
           </div>
           <div class="rm-meta-card">
-            <div class="k">主打产品 · Focus product</div><div>${esc(doc.meta?.focusProductName || '—')}</div>
+            <div class="k">主打产品</div><div>${esc(doc.meta?.focusProductName || '—')}</div>
             <div class="k">对标竞品</div><div>${doc.meta?.competitorCount ?? '—'} 个</div>
-            <div class="k">跨度 · Horizon</div><div>${esc(doc.meta?.horizon || '12m')}</div>
-            <div class="k">生成时间 · Generated</div><div>${esc(fmtTime(doc.meta?.generatedAt || doc.created_at))}</div>
+            <div class="k">跨度</div><div>${esc(doc.meta?.horizon || '12m')}</div>
+            <div class="k">生成时间</div><div>${esc(fmtTime(doc.meta?.generatedAt || doc.created_at))}</div>
           </div>
         </div>
 
@@ -2794,44 +3348,44 @@
 
         <div class="grid three section-gap">
           <div class="card rm-soft">
-            <h3>定位 · Positioning</h3>
+            <h3>定位</h3>
             <p class="rm-quote">${esc(pos.statement || '—')}</p>
             <div class="kv">
-              <div class="k">用户 · User</div><div>${esc(pos.targetUser || '—')}</div>
-              <div class="k">战场 · Battlefield</div><div>${esc(pos.battlefield || '—')}</div>
-              <div class="k">赢法 · Win theme</div><div>${esc(pos.winTheme || '—')}</div>
+              <div class="k">用户</div><div>${esc(pos.targetUser || '—')}</div>
+              <div class="k">战场</div><div>${esc(pos.battlefield || '—')}</div>
+              <div class="k">赢法</div><div>${esc(pos.winTheme || '—')}</div>
             </div>
           </div>
           <div class="card rm-soft">
-            <h3>价格策略 · Pricing strategy</h3>
+            <h3>价格策略</h3>
             <div class="stat-value" style="font-size:20px;margin-bottom:8px">${esc(price.band || '—')}</div>
             <p class="muted" style="font-size:12px;line-height:1.6">${esc(price.logic || '')}</p>
             <p class="item-sub" style="margin-top:8px;white-space:normal">${esc(price.vsCompetitors || '')}</p>
           </div>
           <div class="card rm-soft">
-            <h3>渠道策略 · Channel strategy</h3>
+            <h3>渠道策略</h3>
             <div style="margin-bottom:8px">${(ch.priorityChannels || []).map((c) => `<span class="chip purple">${esc(c)}</span>`).join('') || '—'}</div>
             <ul class="rm-ul">${(ch.actions || []).map((a) => `<li>${esc(a)}</li>`).join('') || '<li class="muted">—</li>'}</ul>
           </div>
         </div>
 
         <div class="card section-gap">
-          <h3>分阶段路线 · Phased roadmap</h3>
+          <h3>分阶段路线</h3>
           <div class="rm-timeline">${phases}</div>
         </div>
 
         <div class="grid two section-gap">
           <div class="card">
-            <h3>能力差距 · Capability gaps</h3>
+            <h3>能力差距</h3>
             <div class="dim-table-wrap" style="border:none">
               <table class="table">
-                <thead><tr><th>优先级 · Priority</th><th>领域 · Area</th><th>现状 · Current</th><th>目标 · Target</th><th>对标 · Benchmark</th></tr></thead>
+                <thead><tr><th>优先级</th><th>领域</th><th>现状</th><th>目标</th><th>对标</th></tr></thead>
                 <tbody>${gaps || '<tr><td colspan="5" class="muted">—</td></tr>'}</tbody>
               </table>
             </div>
           </div>
           <div class="card">
-            <h3>打谁 / 怎么赢 · Who to beat / how to win</h3>
+            <h3>打谁 / 怎么赢</h3>
             <div class="rm-beat-grid">${beat || '<p class="muted empty-hint">—</p>'}</div>
           </div>
         </div>
@@ -2842,30 +3396,30 @@
             <div class="rm-stack">${must || '<p class="muted">—</p>'}</div>
           </div>
           <div class="card">
-            <h3>差异化 · Differentiation</h3>
+            <h3>差异化</h3>
             <div class="rm-stack">${diff || '<p class="muted">—</p>'}</div>
           </div>
         </div>
 
         <div class="grid two section-gap">
           <div class="card">
-            <h3>本周可行动作 · Actions this week</h3>
+            <h3>本周可行动作</h3>
             <table class="table">
-              <thead><tr><th>紧急 · Urgency</th><th>动作 · Action</th><th>角色 · Owner</th></tr></thead>
+              <thead><tr><th>紧急</th><th>动作</th><th>角色</th></tr></thead>
               <tbody>${actions || '<tr><td colspan="3" class="muted">—</td></tr>'}</tbody>
             </table>
           </div>
           <div class="card">
             <h3>KPI</h3>
             <table class="table">
-              <thead><tr><th>指标 · Metric</th><th>基线 · Baseline</th><th>目标 · Target</th><th>节点 · Milestone</th></tr></thead>
+              <thead><tr><th>指标</th><th>基线</th><th>目标</th><th>节点</th></tr></thead>
               <tbody>${kpis || '<tr><td colspan="4" class="muted">—</td></tr>'}</tbody>
             </table>
           </div>
         </div>
 
         ${(doc.assumptions || []).length
-          ? `<div class="card section-gap"><h3>关键假设 · Key assumptions</h3><ul class="rm-ul">${doc.assumptions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>`
+          ? `<div class="card section-gap"><h3>关键假设</h3><ul class="rm-ul">${doc.assumptions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>`
           : ''}
       </div>`;
   }
@@ -2892,8 +3446,8 @@
       const status = $('#rm-status');
       try {
         btn.disabled = true;
-        if (status) status.textContent = '生成中 · Generating, may take 30–90s…';
-        toast('AI 正在推演击败路径… · AI is planning the beat path…', 'info');
+        if (status) status.textContent = '生成中，可能需要 30–90 秒…';
+        toast('AI 正在推演击败路径…', 'info');
         const doc = await call(
           api.generateRoadmap({
             focusProductId: $('#rm-focus')?.value || undefined,
@@ -2902,11 +3456,11 @@
           })
         );
         await showDoc(doc);
-        if (status) status.textContent = `已生成 · Generated: ${fmtTime(doc.meta?.generatedAt || doc.created_at)}`;
-        toast('击败路径已生成 · Beat roadmap generated', 'success');
+        if (status) status.textContent = `已生成：${fmtTime(doc.meta?.generatedAt || doc.created_at)}`;
+        toast('击败路径已生成', 'success');
       } catch (e) {
         toast(e.message, 'error');
-        if (status) status.textContent = '生成失败 · Generation failed';
+        if (status) status.textContent = '生成失败';
       } finally {
         btn.disabled = false;
       }
@@ -2917,7 +3471,7 @@
         try {
           const doc = await call(api.getRoadmap(el.dataset.rmId));
           await showDoc(doc);
-          toast('已加载历史版本 · History · Loaded historical version', 'info');
+          toast('已加载历史版本', 'info');
         } catch (e) {
           toast(e.message, 'error');
         }
@@ -2940,79 +3494,79 @@
         (h) => `
       <tr class="clickable-row" data-history-id="${esc(h.id)}">
         <td>${esc(fmtTime(h.started_at))}</td>
-        <td>${h.trigger === 'loop' ? '<span class="chip purple">后台 · BG</span>' : '<span class="chip">手动 · Manual</span>'}</td>
+        <td>${h.trigger === 'loop' ? '<span class="chip purple">后台</span>' : '<span class="chip">手动</span>'}</td>
         <td><span class="chip ${h.status === 'done' ? 'green' : h.status === 'error' ? 'red' : 'blue'}">${esc(h.status)}</span></td>
         <td>${h.found_count ?? 0}/${h.new_count ?? 0}/${h.threat_count ?? 0}</td>
         <td class="muted">${esc(h.summary || h.error || h.product_name || '—')}</td>
-        <td><button class="btn sm" data-history-id="${esc(h.id)}">详情 · Details</button></td>
+        <td><button class="btn sm" data-history-id="${esc(h.id)}">详情</button></td>
       </tr>`
       )
-      .join('') || '<tr><td colspan="6" class="muted">暂无记录 · No records</td></tr>';
+      .join('') || '<tr><td colspan="6" class="muted">暂无记录</td></tr>';
 
     return `
       <div class="banner">
-        <span>后台扫描写完整日志 · Background scans log fully. Open Details for steps, finds & scores.</span>
+        <span>后台扫描也会写<strong>完整日志与明细</strong>。点下方历史「详情」可查看逐步过程、发现列表与威胁分。</span>
       </div>
       <div class="grid two">
         <div class="card">
-          <h3>引擎状态 · Engine status</h3>
+          <h3>引擎状态</h3>
           <div class="kv">
-            <div class="k">调度 · Schedule</div>
-            <div>${st.isScheduled ? '<span class="chip green">运行中 · Running</span>' : '<span class="chip">已停止 · Stopped</span>'}</div>
-            <div class="k">执行中 · Running</div><div id="loop-running-flag">${st.isRunning ? '是 · Yes' : '否 · No'}</div>
-            <div class="k">频率 · Frequency</div><div>${esc(st.nextHint || st.cron)}</div>
-            <div class="k">威胁阈值 · Threat threshold</div><div>${Math.round((st.threatThreshold || 0.65) * 100)}%</div>
-            <div class="k">上次运行 · Last run</div><div>${esc(fmtTime(st.lastRunAt))}</div>
-            <div class="k">上次结果 · Last result</div>
-            <div>${st.lastResult ? `发现 Found ${st.lastResult.found} / 新增 New ${st.lastResult.newCount} / 高威胁 High ${st.lastResult.threatCount}` : '—'}</div>
-            <div class="k">错误 · Error</div><div class="muted">${esc(st.lastError || '无')}</div>
+            <div class="k">调度</div>
+            <div>${st.isScheduled ? '<span class="chip green">运行中</span>' : '<span class="chip">已停止</span>'}</div>
+            <div class="k">执行中</div><div id="loop-running-flag">${st.isRunning ? '是' : '否'}</div>
+            <div class="k">频率</div><div>${esc(st.nextHint || st.cron)}</div>
+            <div class="k">威胁阈值</div><div>${Math.round((st.threatThreshold || 0.65) * 100)}%</div>
+            <div class="k">上次运行</div><div>${esc(fmtTime(st.lastRunAt))}</div>
+            <div class="k">上次结果</div>
+            <div>${st.lastResult ? `发现 ${st.lastResult.found} / 新增 ${st.lastResult.newCount} / 高威胁 ${st.lastResult.threatCount}` : '—'}</div>
+            <div class="k">错误</div><div class="muted">${esc(st.lastError || '无')}</div>
           </div>
           <div class="row-actions section-gap">
-            <button class="btn primary" id="btn-loop-start">${st.isScheduled ? '重启调度 · Restart schedule' : '启动 Loop · Start Loop'}</button>
-            <button class="btn" id="btn-loop-stop" ${st.isScheduled ? '' : 'disabled'}>停止 · Stop</button>
-            <button class="btn" id="btn-loop-now">立即执行一轮 · Run one cycle now</button>
+            <button class="btn primary" id="btn-loop-start">${st.isScheduled ? '重启调度' : '启动 Loop'}</button>
+            <button class="btn" id="btn-loop-stop" ${st.isScheduled ? '' : 'disabled'}>停止</button>
+            <button class="btn" id="btn-loop-now">立即执行一轮</button>
             ${
               st.lastResult?.historyId
-                ? `<button class="btn" id="btn-loop-last-detail" data-history-id="${esc(st.lastResult.historyId)}">上次详情 · Last details</button>`
+                ? `<button class="btn" id="btn-loop-last-detail" data-history-id="${esc(st.lastResult.historyId)}">上次详情</button>`
                 : ''
             }
           </div>
         </div>
         <div class="card">
-          <h3>调度配置 · Schedule config</h3>
+          <h3>调度配置</h3>
           <div class="form-group">
-            <label>扫描频率 · Scan frequency</label>
+            <label>扫描频率</label>
             <select id="loop-cron">${cronOptions(loop.cron)}</select>
           </div>
           <div class="form-group">
-            <label>高威胁通知 · Notifications阈值 · High-threat alert threshold</label>
+            <label>高威胁通知阈值</label>
             <select id="loop-threshold">
               <option value="0.5" ${loop.threatThreshold == 0.5 ? 'selected' : ''}>50%</option>
-              <option value="0.65" ${loop.threatThreshold == null || Number(loop.threatThreshold) === 0.65 ? 'selected' : ''}>65%（推荐 · Recommended）</option>
+              <option value="0.65" ${loop.threatThreshold == null || Number(loop.threatThreshold) === 0.65 ? 'selected' : ''}>65%（推荐）</option>
               <option value="0.75" ${loop.threatThreshold == 0.75 ? 'selected' : ''}>75%</option>
               <option value="0.85" ${loop.threatThreshold == 0.85 ? 'selected' : ''}>85%</option>
             </select>
           </div>
-          <button class="btn primary" id="btn-loop-save">保存配置 · Save config</button>
+          <button class="btn primary" id="btn-loop-save">保存配置</button>
           <p class="muted" style="margin-top:14px;font-size:12px;line-height:1.6">
-            后台实时日志 · Live log见下 · Live logs below; Details for full steps.
+            后台扫描实时日志见下方；历史点「详情」可看完整步骤。
           </p>
         </div>
       </div>
       <div class="grid two section-gap">
         <div class="card">
-          <h3>实时日志 · Live log <span class="muted" style="font-weight:500;font-size:12px" id="loop-live-stage">待命</span></h3>
+          <h3>实时日志 <span class="muted" style="font-weight:500;font-size:12px" id="loop-live-stage">待命</span></h3>
           <div class="progress"><i id="loop-live-progress"></i></div>
           <div class="scan-console" id="loop-live-console">
-            <div class="line info">// 后台进度 · Progress for background / run-now appears here</div>
+            <div class="line info">// 后台 / 立即执行时的进度会显示在这里</div>
           </div>
         </div>
         <div class="card">
-          <h3>扫描历史 · Scan history</h3>
+          <h3>扫描历史</h3>
           <div class="dim-table-wrap" style="border:none;max-height:320px">
             <table class="table">
               <thead>
-                <tr><th>时间 · Time</th><th>来源 · Source</th><th>状态 · Status</th><th>发/新/危 · F/N/T</th><th>摘要 · Summary</th><th></th></tr>
+                <tr><th>时间</th><th>来源</th><th>状态</th><th>发/新/危</th><th>摘要</th><th></th></tr>
               </thead>
               <tbody>${histRows}</tbody>
             </table>
@@ -3023,13 +3577,13 @@
 
   function cronOptions(current) {
     const opts = [
-      ['0 * * * *', '每小时 · Hourly'],
-      ['0 */2 * * *', '每 2 小时 · Every 2h'],
-      ['0 */4 * * *', '每 4 小时 · Every 4h'],
-      ['0 */6 * * *', '每 6 小时 · Every 6h'],
-      ['0 */12 * * *', '每 12 小时 · Every 12h'],
-      ['0 9 * * *', '每天 09:00 · Daily 09:00'],
-      ['0 9 * * 1', '每周一 09:00 · Mon 09:00'],
+      ['0 * * * *', '每小时'],
+      ['0 */2 * * *', '每 2 小时'],
+      ['0 */4 * * *', '每 4 小时'],
+      ['0 */6 * * *', '每 6 小时'],
+      ['0 */12 * * *', '每 12 小时'],
+      ['0 9 * * *', '每天 09:00'],
+      ['0 9 * * 1', '每周一 09:00'],
     ];
     return opts
       .map(([v, l]) => `<option value="${v}" ${current === v ? 'selected' : ''}>${l}</option>`)
@@ -3048,7 +3602,7 @@
           })
         );
         if (res.readiness) setReadiness(res.readiness);
-        toast('配置已保存 · Settings saved', 'success');
+        toast('配置已保存', 'success');
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
@@ -3066,7 +3620,7 @@
           })
         );
         await call(api.startLoop());
-        toast('Loop 已启动 · Loop started', 'success');
+        toast('Loop 已启动', 'success');
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
@@ -3075,7 +3629,7 @@
     $('#btn-loop-stop')?.addEventListener('click', async () => {
       try {
         await call(api.stopLoop());
-        toast('Loop 已停止 · Loop stopped', 'info');
+        toast('Loop 已停止', 'info');
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
@@ -3083,13 +3637,13 @@
     });
     $('#btn-loop-now')?.addEventListener('click', async () => {
       try {
-        toast('正在执行… · Running…', 'info');
+        toast('正在执行…', 'info');
         const box = $('#loop-live-console');
         if (box) {
-          box.innerHTML = '<div class="line info">// 开始后台一轮 · Starting background cycle…</div>';
+          box.innerHTML = '<div class="line info">// 开始后台一轮…</div>';
         }
         const res = await call(api.runLoopNow());
-        toast(`完成 Done · new ${res?.newCount || 0}`, 'success');
+        toast(`完成：新增 ${res?.newCount || 0}`, 'success');
         if (res?.historyId) {
           // 留一秒让用户看到完成日志，再刷新可点详情
           setTimeout(() => renderPage(), 400);
@@ -3121,22 +3675,30 @@
     const llm = s.llm || {};
     const n = s.notifications || {};
     return `
-      <div class="grid two">
+      <div class="card" style="margin-bottom:16px">
+          <h3>界面语言</h3>
+          <p class="muted" style="font-size:12px;margin-bottom:12px">切换后立即生效，并记住你的选择。</p>
+          <div class="lang-switch settings-lang">
+            <button type="button" class="lang-btn ${state.lang==='zh'?'active':''}" data-lang="zh">中文</button>
+            <button type="button" class="lang-btn ${state.lang==='en'?'active':''}" data-lang="en">English</button>
+          </div>
+        </div>
+        <div class="grid two">
         <div class="card">
-          <h3>LLM 配置 · LLM settings</h3>
-          <p class="muted" style="margin-bottom:12px;font-size:12px">兼容 OpenAI Chat Completions · Supports MiniMax / Kimi / DeepSeek / Qwen / Ollama…</p>
+          <h3>LLM 配置</h3>
+          <p class="muted" style="margin-bottom:12px;font-size:12px">兼容 OpenAI Chat Completions。支持 MiniMax / Kimi / DeepSeek / 通义 / Ollama 等。</p>
           <div class="form-group">
-            <label>Provider 预设 · Provider preset</label>
+            <label>Provider 预设</label>
             <select id="llm-preset">
               <option value="openai">OpenAI</option>
-              <option value="minimax">MiniMax（国内 · China）</option>
-              <option value="minimax-intl">MiniMax（国际 · Intl）</option>
-              <option value="kimi">Kimi 月之暗面（国内 · China）</option>
-              <option value="kimi-intl">Kimi（国际 · Intl）</option>
+              <option value="minimax">MiniMax（国内）</option>
+              <option value="minimax-intl">MiniMax（国际）</option>
+              <option value="kimi">Kimi 月之暗面（国内）</option>
+              <option value="kimi-intl">Kimi（国际）</option>
               <option value="deepseek">DeepSeek</option>
-              <option value="qwen">通义千问 · Qwen</option>
-              <option value="ollama">Ollama 本地 · Ollama local</option>
-              <option value="custom">自定义 · Custom</option>
+              <option value="qwen">通义千问</option>
+              <option value="ollama">Ollama 本地</option>
+              <option value="custom">自定义</option>
             </select>
           </div>
           <div class="form-group">
@@ -3157,28 +3719,28 @@
             <input id="llm-temp" type="number" min="0" max="2" step="0.1" value="${llm.temperature ?? 0.3}" />
           </div>
           <div class="form-group">
-            <label>请求超时 · Request timeout</label>
+            <label>请求超时</label>
             <select id="llm-timeout">
-              <option value="60000" ${Number(llm.timeoutMs) === 60000 ? 'selected' : ''}>60 秒 · 60s</option>
-              <option value="120000" ${!llm.timeoutMs || Number(llm.timeoutMs) === 120000 ? 'selected' : ''}>120 秒（推荐 · Recommended）</option>
-              <option value="180000" ${Number(llm.timeoutMs) === 180000 ? 'selected' : ''}>180 秒 · 180s</option>
-              <option value="300000" ${Number(llm.timeoutMs) === 300000 ? 'selected' : ''}>300 秒 · 300s</option>
+              <option value="60000" ${Number(llm.timeoutMs) === 60000 ? 'selected' : ''}>60 秒</option>
+              <option value="120000" ${!llm.timeoutMs || Number(llm.timeoutMs) === 120000 ? 'selected' : ''}>120 秒（推荐）</option>
+              <option value="180000" ${Number(llm.timeoutMs) === 180000 ? 'selected' : ''}>180 秒</option>
+              <option value="300000" ${Number(llm.timeoutMs) === 300000 ? 'selected' : ''}>300 秒</option>
             </select>
-            <div class="hint">竞品扫描多轮研究 · Multi-round research; MiniMax/Kimi ≥120s recommended (≥180s for research).</div>
+            <div class="hint">竞品扫描会做多轮研究；MiniMax/Kimi 建议 ≥120s。研究任务实际不低于 180s。</div>
           </div>
           <div class="row-actions">
-            <button class="btn" id="btn-test-llm">测试连接 · Test connection</button>
-            <button class="btn primary" id="btn-save-llm">保存 · Save</button>
+            <button class="btn" id="btn-test-llm">测试连接</button>
+            <button class="btn primary" id="btn-save-llm">保存</button>
           </div>
           <p class="muted" id="llm-test-msg" style="margin-top:10px;font-size:12px"></p>
         </div>
         <div>
           <div class="card">
-            <h3>通知 · Notifications</h3>
+            <h3>通知</h3>
             <div class="switch-row">
               <div>
-                <div>桌面通知 · Notifications · Desktop notifications</div>
-                <div class="hint muted">高威胁竞品 · High-threat rivals出现时弹出 · Popup when high-threat appears</div>
+                <div>桌面通知</div>
+                <div class="hint muted">高威胁竞品出现时弹出</div>
               </div>
               <label class="switch">
                 <input type="checkbox" id="n-desktop" ${n.desktop !== false ? 'checked' : ''} />
@@ -3186,25 +3748,25 @@
               </label>
             </div>
             <div class="form-group" style="margin-top:12px">
-              <label>通知 · Notifications最低威胁</label>
+              <label>通知最低威胁</label>
               <select id="n-min">
                 <option value="0.5" ${n.minThreat == 0.5 ? 'selected' : ''}>50%</option>
                 <option value="0.65" ${n.minThreat == null || Number(n.minThreat) === 0.65 ? 'selected' : ''}>65%</option>
                 <option value="0.75" ${n.minThreat == 0.75 ? 'selected' : ''}>75%</option>
               </select>
             </div>
-            <button class="btn primary" id="btn-save-notify">保存通知 · Save notifications · Notifications</button>
+            <button class="btn primary" id="btn-save-notify">保存通知</button>
           </div>
           <div class="card section-gap">
-            <h3>数据 · Data</h3>
+            <h3>数据</h3>
             <p class="muted" style="font-size:12px;line-height:1.6;margin-bottom:12px">
-              本地单机存储 · Local-only storage. Export competitors, full backup, or restore.
+              本地单机存储。可导出竞品、整库备份或从备份恢复。
             </p>
             <div class="row-actions">
-              <button class="btn" id="btn-export-json">导出 JSON · Export JSON</button>
-              <button class="btn" id="btn-export-csv2">导出 CSV · Export CSV</button>
-              <button class="btn" id="btn-backup">完整备份 · Full backup</button>
-              <button class="btn" id="btn-restore">恢复备份 · Restore backup</button>
+              <button class="btn" id="btn-export-json">导出 JSON</button>
+              <button class="btn" id="btn-export-csv2">导出 CSV</button>
+              <button class="btn" id="btn-backup">完整备份</button>
+              <button class="btn" id="btn-restore">恢复备份</button>
             </div>
           </div>
         </div>
@@ -3212,6 +3774,9 @@
   }
 
   function bindSettings() {
+    document.querySelectorAll('.lang-btn').forEach((b) => {
+      b.addEventListener('click', () => setLang(b.dataset.lang));
+    });
     const presets = {
       openai: { provider: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
       minimax: {
@@ -3284,7 +3849,7 @@
     $('#btn-save-llm')?.addEventListener('click', async () => {
       try {
         await saveLlm();
-        toast('LLM 配置已保存 · Settings saved · LLM settings saved', 'success');
+        toast('LLM 配置已保存', 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
@@ -3293,12 +3858,12 @@
     $('#btn-test-llm')?.addEventListener('click', async () => {
       try {
         await saveLlm();
-        $('#llm-test-msg').textContent = '测试中… · Testing…';
+        $('#llm-test-msg').textContent = '测试中…';
         const res = await call(api.testLlm());
-        $('#llm-test-msg').textContent = '连接成功 · Connected: ' + String(res.reply || '').slice(0, 80);
-        toast('LLM 连接成功 · LLM connected', 'success');
+        $('#llm-test-msg').textContent = '连接成功：' + String(res.reply || '').slice(0, 80);
+        toast('LLM 连接成功', 'success');
       } catch (e) {
-        $('#llm-test-msg').textContent = '失败 · Failed: ' + e.message;
+        $('#llm-test-msg').textContent = '失败：' + e.message;
         toast(e.message, 'error');
       }
     });
@@ -3313,7 +3878,7 @@
             },
           })
         );
-        toast('通知 · Notifications设置已保存 · Notification settings saved', 'success');
+        toast('通知设置已保存', 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
@@ -3322,7 +3887,7 @@
     $('#btn-export-json')?.addEventListener('click', async () => {
       try {
         const r = await call(api.exportCompetitors('json'));
-        if (!r.canceled) toast(`已导出 · Exported ${r.count} rows`, 'success');
+        if (!r.canceled) toast(`已导出 ${r.count} 条`, 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
@@ -3330,7 +3895,7 @@
     $('#btn-export-csv2')?.addEventListener('click', async () => {
       try {
         const r = await call(api.exportCompetitors('csv'));
-        if (!r.canceled) toast(`已导出 · Exported ${r.count} rows`, 'success');
+        if (!r.canceled) toast(`已导出 ${r.count} 条`, 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
@@ -3338,18 +3903,18 @@
     $('#btn-backup')?.addEventListener('click', async () => {
       try {
         const r = await call(api.exportBackup());
-        if (!r.canceled) toast('备份完成 · Backup done', 'success');
+        if (!r.canceled) toast('备份完成', 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
     });
     $('#btn-restore')?.addEventListener('click', async () => {
-      if (!confirm('恢复备份 · Restore backup将覆盖数据 · Restore overwrites data & some settings. Continue?')) return;
+      if (!confirm(t('恢复备份将覆盖当前数据与部分设置，是否继续？'))) return;
       try {
         const r = await call(api.importBackup());
         if (!r.canceled) {
           if (r.readiness) setReadiness(r.readiness);
-          toast('恢复成功 · Restore successful', 'success');
+          toast('恢复成功', 'success');
           renderPage();
         }
       } catch (e) {
@@ -3375,41 +3940,41 @@
     $('#ob-progress').style.width = `${((step + 1) / total) * 100}%`;
     const body = $('#ob-body');
     $('#ob-back').style.visibility = step === 0 ? 'hidden' : 'visible';
-    $('#ob-next').textContent = step === total - 1 ? '进入应用 · Enter app' : '继续 · Continue';
+    $('#ob-next').textContent = step === total - 1 ? t('进入应用') : t('继续');
 
     if (step === 0) {
-      body.innerHTML = `
-        <div class="ob-step-title">欢迎使用竞品情报 · Welcome to Competitor Scout</div>
-        <div class="ob-step-desc">单机本地应用 · Local desktop app: guided setup, readiness, multi-dim threat matching, scheduled scans, backup/export.</div>
+      body.innerHTML = trHtml(`
+        <div class="ob-step-title">欢迎使用竞品情报</div>
+        <div class="ob-step-desc">单机本地应用，按专业产品标准打造：配置引导、就绪检查、多维威胁匹配、定时扫描与备份导出。</div>
         <div class="ob-features">
-          <div class="ob-feature"><div><strong>LLM 研究扫描 · LLM research scan</strong><span>自配模型 · Bring your model; structured price / specs / channels</span></div></div>
-          <div class="ob-feature"><div><strong>Agent 二次确认 · Agent re-verify</strong><span>交叉校验后再入库 · Cross-check candidates before save</span></div></div>
-          <div class="ob-feature"><div><strong>多维向量威胁 · Multi-dim threat vectors</strong><span>价格/功能/渠道/定位综合排名 · Rank by price, features, channels, positioning</span></div></div>
-          <div class="ob-feature"><div><strong>Loop 定时巡检 · Loop scheduled watch</strong><span>发现高威胁自动通知 · Notifications · Auto-notify on high threat</span></div></div>
-        </div>`;
+          <div class="ob-feature"><div><strong>LLM 研究扫描</strong><span>自配模型，结构化收集价格 / 规格 / 渠道</span></div></div>
+          <div class="ob-feature"><div><strong>Agent 二次确认</strong><span>交叉校验候选质量后再入库</span></div></div>
+          <div class="ob-feature"><div><strong>多维向量威胁</strong><span>价格、功能、渠道、定位综合排名</span></div></div>
+          <div class="ob-feature"><div><strong>Loop 定时巡检</strong><span>发现高威胁自动通知</span></div></div>
+        </div>`);
     } else if (step === 1) {
       const llm = state.bootstrap?.llm || {};
-      body.innerHTML = `
-        <div class="ob-step-title">连接你的大模型 · LLM · Connect your LLM</div>
-        <div class="ob-step-desc">支持 OpenAI 兼容接口 · OpenAI-compatible APIs (MiniMax / Kimi…). Change later in Settings.</div>
+      body.innerHTML = trHtml(`
+        <div class="ob-step-title">连接你的大模型</div>
+        <div class="ob-step-desc">支持 OpenAI 兼容接口（MiniMax / Kimi 等）。可稍后在设置中修改。</div>
         <div class="form-group">
-          <label>快速预设 · Quick preset</label>
+          <label>快速预设</label>
           <select id="ob-preset">
-            <option value="minimax">MiniMax（国内 · China）</option>
-            <option value="minimax-intl">MiniMax（国际 · Intl）</option>
-            <option value="kimi">Kimi 月之暗面（国内 · China）</option>
-            <option value="kimi-intl">Kimi（国际 · Intl）</option>
+            <option value="minimax">MiniMax（国内）</option>
+            <option value="minimax-intl">MiniMax（国际）</option>
+            <option value="kimi">Kimi 月之暗面（国内）</option>
+            <option value="kimi-intl">Kimi（国际）</option>
             <option value="openai">OpenAI</option>
             <option value="deepseek">DeepSeek</option>
-            <option value="qwen">通义千问 · Qwen</option>
-            <option value="ollama">Ollama 本地 · Ollama local</option>
+            <option value="qwen">通义千问</option>
+            <option value="ollama">Ollama 本地</option>
           </select>
         </div>
         <div class="form-group"><label>Base URL</label><input id="ob-base" type="url" value="${esc(llm.baseUrl || 'https://api.minimaxi.com/v1')}" /></div>
-        <div class="form-group"><label>API Key</label><input id="ob-key" type="password" value="" placeholder="在对应开放平台获取 API Key · Get API key from the provider console" /></div>
+        <div class="form-group"><label>API Key</label><input id="ob-key" type="password" value="" placeholder="在对应开放平台获取 API Key" /></div>
         <div class="form-group"><label>Model</label><input id="ob-model" type="text" value="${esc(llm.model || 'MiniMax-M2')}" placeholder="MiniMax-M2 / kimi-k2.5" />
           <div class="hint">MiniMax：MiniMax-M2 · Kimi：kimi-k2.5 / moonshot-v1-128k</div>
-        </div>`;
+        </div>`);
       const obPresets = {
         minimax: { baseUrl: 'https://api.minimaxi.com/v1', model: 'MiniMax-M2' },
         'minimax-intl': { baseUrl: 'https://api.minimax.io/v1', model: 'MiniMax-M2' },
@@ -3428,22 +3993,22 @@
       });
     } else if (step === 2) {
       const p = state.bootstrap?.product || {};
-      body.innerHTML = `
-        <div class="ob-step-title">定义你的产品 · Define your product</div>
-        <div class="ob-step-desc">这是威胁匹配基准 · Threat-matching baseline. Name required; more detail is better.</div>
-        <div class="form-group"><label>产品名称 * · Product name *</label><input id="ob-pname" type="text" value="${esc(p.name || '')}" placeholder="你的产品名 · Your product name" /></div>
-        <div class="form-group"><label>品类 · Category</label><input id="ob-pcat" type="text" value="${esc(p.category || '')}" /></div>
-        <div class="form-group"><label>标价 · List price</label><input id="ob-pprice" type="number" value="${p.price ?? ''}" /></div>
-        <div class="form-group"><label>一句话描述 · One-line description</label><textarea id="ob-pdesc">${esc(p.description || '')}</textarea></div>`;
+      body.innerHTML = trHtml(`
+        <div class="ob-step-title">定义你的产品</div>
+        <div class="ob-step-desc">这是威胁匹配的基准。名称必填，其他越完整越好。</div>
+        <div class="form-group"><label>产品名称 *</label><input id="ob-pname" type="text" value="${esc(p.name || '')}" placeholder="你的产品名" /></div>
+        <div class="form-group"><label>品类</label><input id="ob-pcat" type="text" value="${esc(p.category || '')}" /></div>
+        <div class="form-group"><label>标价</label><input id="ob-pprice" type="number" value="${p.price ?? ''}" /></div>
+        <div class="form-group"><label>一句话描述</label><textarea id="ob-pdesc">${esc(p.description || '')}</textarea></div>`);
     } else {
-      body.innerHTML = `
-        <div class="ob-step-title">一切就绪 · You're all set</div>
-        <div class="ob-step-desc">建议路径 · Suggested path: enrich specs/channels → first scan → confirm high threats → enable Loop.</div>
+      body.innerHTML = trHtml(`
+        <div class="ob-step-title">一切就绪</div>
+        <div class="ob-step-desc">建议路径：完善规格与渠道 → 发起首次扫描 → 确认高威胁竞品 → 按需开启 Loop。</div>
         <div class="ob-features">
-          <div class="ob-feature"><div><strong>1. 智能扫描 · Smart Scan</strong><span>让 Agent 拉取第一批候选 · Let Agent pull first candidates</span></div></div>
-          <div class="ob-feature"><div><strong>2. 竞品库确认 · Confirm in library</strong><span>只把真正的对手入库 · Keep only real rivals</span></div></div>
-          <div class="ob-feature"><div><strong>3. 开启 Loop · Enable Loop</strong><span>自动盯盘，高威胁即通知 · Notifications · Watch the market; alert on high threat</span></div></div>
-        </div>`;
+          <div class="ob-feature"><div><strong>1. 智能扫描</strong><span>让 Agent 拉取第一批候选</span></div></div>
+          <div class="ob-feature"><div><strong>2. 竞品库确认</strong><span>只把真正的对手入库</span></div></div>
+          <div class="ob-feature"><div><strong>3. 开启 Loop</strong><span>自动盯盘，高威胁即通知</span></div></div>
+        </div>`);
     }
   }
 
@@ -3492,7 +4057,7 @@
         hideOnboarding();
         const readiness = await call(api.getReadiness());
         setReadiness(readiness);
-        toast('配置完成，开始使用吧 · Setup done — start exploring', 'success');
+        toast('配置完成，开始使用吧', 'success');
         navigate(readiness.canScan ? 'scan' : 'dashboard');
         return;
       }
@@ -3511,7 +4076,7 @@
     $('#btn-export')?.addEventListener('click', async () => {
       try {
         const r = await call(api.exportCompetitors('json'));
-        if (!r.canceled) toast(`已导出 · Exported ${r.count} rows`, 'success');
+        if (!r.canceled) toast(`已导出 ${r.count} 条`, 'success');
       } catch (e) {
         toast(e.message, 'error');
       }
@@ -3581,7 +4146,7 @@
           appendScanLog({ level, stage: p.stage, message: p.message });
         }
       }
-      // Loop 页实时日志 · Live log（后台扫描也能看）
+      // Loop 页实时日志（后台扫描也能看）
       if (state.page === 'loop') {
         if (p.percent != null) {
           const bar = $('#loop-live-progress');
@@ -3592,7 +4157,7 @@
         const flag = $('#loop-running-flag');
         if (flag) {
           flag.textContent =
-            p.stage === 'done' || p.stage === 'error' ? '否 · No' : '是 · Yes';
+            p.stage === 'done' || p.stage === 'error' ? '否' : '是';
         }
         const box = $('#loop-live-console');
         if (box && p.message) {
@@ -3613,8 +4178,8 @@
       if (result.newCount > 0) {
         pushNotify({
           id: Date.now().toString(),
-          title: '定时扫描完成 · Scheduled scan done',
-          body: `新增 New ${result.newCount} · 高威胁 High threat ${result.newThreats?.length || 0}`,
+          title: t('定时扫描完成'),
+          body: `新增 ${result.newCount} 个竞品，高威胁 ${result.newThreats?.length || 0}`,
           level: result.newThreats?.length ? 'high' : 'info',
           time: new Date().toISOString(),
         });
@@ -3624,8 +4189,8 @@
     api.on('loop:error', (err) => {
       pushNotify({
         id: Date.now().toString(),
-        title: 'Loop 扫描失败 · Scan failed',
-        body: err.message || '未知错误 · Unknown error',
+        title: t('Loop 扫描失败'),
+        body: err.message || '未知错误',
         level: 'high',
         time: new Date().toISOString(),
       });
@@ -3637,14 +4202,23 @@
   async function boot() {
     try {
       if (typeof api === 'undefined') {
-        throw new Error('API 未注入 · API not injected — start with Electron (npm start)');
+        throw new Error('API 未注入，请使用 Electron 启动（npm start）');
       }
       const bootData = await call(api.bootstrap());
       state.bootstrap = bootData;
+      let pref = state.lang;
+      try {
+        const full = await call(api.getSettingsFull());
+        if (full?.ui?.lang) pref = full.ui.lang;
+      } catch { /* ignore */ }
+      setLang(pref, { persist: false, rerender: false });
       setReadiness(bootData.readiness);
       $('#boot')?.classList.add('hidden');
       $('#app')?.classList.remove('hidden');
       bindGlobal();
+      document.querySelectorAll('.lang-btn').forEach((b) => {
+        b.addEventListener('click', () => setLang(b.dataset.lang));
+      });
 
       if (!bootData.onboarding?.completed) {
         showOnboarding(bootData.onboarding?.step || 0);
@@ -3656,8 +4230,8 @@
         bootEl.innerHTML = `
           <div class="boot-card">
             <div class="brand-mark lg">!</div>
-            <div class="boot-title">启动失败 · Startup failed</div>
-            <div class="boot-sub">${esc(err.message)}</div>
+            <div class="boot-title">${esc(t('启动失败'))}</div>
+            <div class="boot-sub">${esc(t(err.message))}</div>
           </div>`;
       }
     }

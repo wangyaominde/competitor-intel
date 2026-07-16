@@ -228,7 +228,43 @@ html.is-darwin .brand-mark {
 }
 .nav-icon { width: 20px; text-align: center; opacity: 0.9; }
 
-.sidebar-footer { padding-top: 12px; }
+.sidebar-footer { padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.lang-switch {
+  display: inline-flex;
+  align-self: stretch;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+.lang-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active {
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+.lang-switch.settings-lang {
+  max-width: 280px;
+  align-self: flex-start;
+}
+.lang-switch.settings-lang .lang-btn {
+  font-size: 13px;
+  padding: 8px 14px;
+}
 
 .loop-pill {
   display: flex;

@@ -50,7 +50,7 @@
         id: DEMO.product.id || 'p1',
         name: DEMO.product.name,
         category: DEMO.product.category || '',
-        description: DEMO.product.description || 'Demo 基准产品 · Demo baseline product',
+        description: DEMO.product.description || 'Demo 基准产品',
         price: DEMO.product.price ?? null,
         specs: { ...(DEMO.product.specs || {}) },
         channels: [...(DEMO.product.channels || [])],
@@ -120,44 +120,45 @@
       hasKey: true,
     },
     onboarding: { completed: true, step: 3, firstScanDone: true },
+    ui: { theme: 'dark', lang: (typeof localStorage !== 'undefined' && localStorage.getItem('cs_lang')) || 'zh' },
     notifications: { desktop: true, minThreat: 0.65 },
   };
 
   function readiness() {
     const products = state.products;
     const checks = [
-      { id: 'llm', title: '配置大模型 · Configure LLM', done: true, weight: 30, cta: 'settings', hint: 'Demo 已内置模拟 LLM · Demo uses a simulated LLM' },
+      { id: 'llm', title: '配置大模型', done: true, weight: 30, cta: 'settings', hint: 'Demo 已内置模拟 LLM' },
       {
         id: 'product',
-        title: '完善产品画像 · Complete product profile',
+        title: '完善产品画像',
         done: products.some((p) => p.name),
         weight: 30,
         cta: 'product',
-        hint: '已配置 · Configured',
+        hint: '已配置',
       },
       {
         id: 'product_rich',
-        title: '规格与渠道（推荐） · Specs & channels (recommended)',
+        title: '规格与渠道（推荐）',
         done: products.some((p) => (p.channels || []).length || Object.keys(p.specs || {}).length),
         weight: 15,
         cta: 'product',
-        hint: '已配置 · Configured',
+        hint: '已配置',
       },
       {
         id: 'first_scan',
-        title: '完成首次扫描 · Complete first scan',
+        title: '完成首次扫描',
         done: state.competitors.length > 0 || state.onboarding.firstScanDone,
         weight: 15,
         cta: 'scan',
-        hint: '已完成 · Done',
+        hint: '已完成',
       },
       {
         id: 'confirm',
-        title: '确认至少 1 个竞品 · Confirm at least 1 competitor',
+        title: '确认至少 1 个竞品',
         done: state.competitors.some((c) => c.status === 'confirmed'),
         weight: 10,
         cta: 'competitors',
-        hint: '可在竞品库确认 · Confirm in Competitors',
+        hint: '可在竞品库确认',
       },
     ];
     const score = checks.reduce((s, c) => s + (c.done ? c.weight : 0), 0);
@@ -240,12 +241,12 @@
 
   async function fakeScan() {
     const steps = [
-      { stage: 'start', message: '开始扫描（Demo）· Start scan · baseline: ' + (activeProduct()?.name || ''), percent: 5 },
-      { stage: 'discover', message: 'Agent 正在研究竞品… · Researching competitors…', percent: 12 },
+      { stage: 'start', message: '开始扫描（Demo）· 基准：' + (activeProduct()?.name || ''), percent: 5 },
+      { stage: 'discover', message: 'Agent 正在研究竞品…', percent: 12 },
       { stage: 'discover-done', message: `发现 ${state.competitors.length} 个候选`, percent: 30 },
-      { stage: 'enrich', message: '补全情报… · Enriching…', percent: 45 },
-      { stage: 'rag', message: '威胁判定 · Threat BM25 + RAG (simulated)', percent: 70 },
-      { stage: 'verify', message: 'Agent 交叉校验… · Agent cross-check…', percent: 88 },
+      { stage: 'enrich', message: '补全情报…', percent: 45 },
+      { stage: 'rag', message: '威胁判定 · BM25 + RAG（模拟）', percent: 70 },
+      { stage: 'verify', message: 'Agent 交叉校验…', percent: 88 },
       {
         stage: 'done',
         message: `扫描完成：发现 ${state.competitors.length}，高威胁 ${statsCore().highThreat}`,
@@ -267,7 +268,7 @@
       threat_count: statsCore().highThreat,
       started_at: now(),
       finished_at: now(),
-      summary: 'Demo 扫描 · Demo scan',
+      summary: 'Demo 扫描',
       product_name: activeProduct()?.name,
       logs: steps.map((s) => ({ ...s, at: now() })),
     };
@@ -289,9 +290,9 @@
   }
   function collectParams(entity) {
     const rows = [];
-    if (entity.price != null) rows.push({ key: '标价 · List price', value: String(entity.price) });
-    if (entity.price_range) rows.push({ key: '价格区间 · Price range', value: String(entity.price_range) });
-    if (entity.category) rows.push({ key: '品类 · Category', value: entity.category });
+    if (entity.price != null) rows.push({ key: '标价', value: String(entity.price) });
+    if (entity.price_range) rows.push({ key: '价格区间', value: String(entity.price_range) });
+    if (entity.category) rows.push({ key: '品类', value: entity.category });
     if ((entity.channels || []).length) {
       rows.push({
         key: '渠道',
@@ -309,12 +310,12 @@
     const flat = [];
     const pairs = [];
     const label = {
-      same: '相同 · Same',
-      diff: '不同 · Different',
-      ours_only: '仅我方 · Ours only',
-      theirs_only: '仅竞品 · Theirs only',
-      ours_higher: '我方数值高 · Ours higher',
-      theirs_higher: '竞品数值高 · Theirs higher',
+      same: '相同',
+      diff: '不同',
+      ours_only: '仅我方',
+      theirs_only: '仅竞品',
+      ours_higher: '我方数值高',
+      theirs_higher: '竞品数值高',
     };
     for (const p of products) {
       for (const c of comps) {
@@ -405,7 +406,7 @@
         llm: { ...state.llm, apiKey: '••••demo', hasKey: true },
         loop: state.loop,
         notifications: state.notifications,
-        ui: { theme: 'dark' },
+        ui: state.ui || { theme: 'dark', lang: 'zh' },
       }),
     getSettingsFull: () =>
       ok({
@@ -415,12 +416,16 @@
         product: activeProduct(),
         products: { items: state.products, activeId: state.activeId },
         onboarding: state.onboarding,
+        ui: state.ui || { theme: 'dark', lang: 'zh' },
       }),
     saveSettings: (partial) => {
       if (partial?.llm) Object.assign(state.llm, partial.llm, { apiKey: 'demo', hasKey: true });
       if (partial?.loop) Object.assign(state.loop, partial.loop);
       if (partial?.notifications) Object.assign(state.notifications, partial.notifications);
-      return ok({ readiness: readiness() });
+      if (partial?.ui) {
+        state.ui = { ...(state.ui || { theme: 'dark', lang: 'zh' }), ...partial.ui };
+      }
+      return ok({ readiness: readiness(), ui: state.ui });
     },
     testLlm: async () => {
       await sleep(400);
@@ -439,7 +444,7 @@
       } else {
         const row = {
           id: uid('p'),
-          name: p.name || '未命名 · Untitled',
+          name: p.name || '未命名',
           category: p.category || '',
           description: p.description || '',
           price: p.price ?? null,
@@ -463,13 +468,13 @@
       state.activeId = id;
       return ok({ active: activeProduct(), readiness: readiness() });
     },
-    parseSpecFiles: async () => ok({ canceled: true, error: 'Demo 不支持本地文件解析 · Demo does not parse local files' }),
+    parseSpecFiles: async () => ok({ canceled: true, error: 'Demo 不支持本地文件解析' }),
     applySpecFields: () => ok({ readiness: readiness() }),
 
     listCompetitors: (filters) => ok(listCompetitors(filters || {})),
     getCompetitor: (id) => {
       const c = state.competitors.find((x) => x.id === id);
-      return c ? ok(c) : fail('竞品不存在 · Competitor not found', 'NOT_FOUND');
+      return c ? ok(c) : fail('竞品不存在', 'NOT_FOUND');
     },
     upsertCompetitor: (data) => {
       const d = data || {};
@@ -501,14 +506,14 @@
     },
     confirmCompetitor: (id) => {
       const c = state.competitors.find((x) => x.id === id);
-      if (!c) return fail('竞品不存在 · Competitor not found', 'NOT_FOUND');
+      if (!c) return fail('竞品不存在', 'NOT_FOUND');
       c.status = 'confirmed';
       c.updated_at = now();
       return ok(c);
     },
     rejectCompetitor: (id) => {
       const c = state.competitors.find((x) => x.id === id);
-      if (!c) return fail('竞品不存在 · Competitor not found', 'NOT_FOUND');
+      if (!c) return fail('竞品不存在', 'NOT_FOUND');
       c.status = 'rejected';
       c.updated_at = now();
       return ok({ rejected: true });
@@ -518,7 +523,7 @@
     confirmBatch: async (ids) => ok({ results: (ids || []).map((id) => ({ id, ok: true })) }),
     verifyOne: async (id) => {
       const c = state.competitors.find((x) => x.id === id);
-      if (!c) return fail('未找到竞品 · Competitor not found');
+      if (!c) return fail('未找到竞品');
       emit('scan:progress', { stage: 'verify', message: `Demo 校验 ${c.name}`, percent: 90 });
       await sleep(500);
       c.notes = (c.notes || '') + '\n[Demo Agent 校验通过]';
@@ -527,7 +532,7 @@
 
     analyzeAllThreats: async () => {
       const all = state.competitors;
-      emit('threat:progress', { stage: 'start', message: '全库重算判定（Demo） · Rescore all (Demo)', percent: 0 });
+      emit('threat:progress', { stage: 'start', message: '全库重算判定（Demo）', percent: 0 });
       for (let i = 0; i < all.length; i++) {
         emit('threat:progress', {
           stage: 'competitor',
@@ -536,15 +541,15 @@
         });
         await sleep(120);
       }
-      emit('threat:progress', { stage: 'done', message: '判定已更新（Demo） · Scores updated (Demo)', percent: 100 });
+      emit('threat:progress', { stage: 'done', message: '判定已更新（Demo）', percent: 100 });
       return ok({ ranked: all, competitorCount: all.length, productCount: state.products.length });
     },
     matchThreat: async (id) => {
       const c = state.competitors.find((x) => x.id === id);
-      if (!c) return fail('未找到竞品 · Competitor not found');
+      if (!c) return fail('未找到竞品');
       emit('threat:progress', { stage: 'start', message: `重算判定「${c.name}」`, percent: 10 });
       await sleep(400);
-      emit('threat:progress', { stage: 'done', message: '完成 · Done', percent: 100 });
+      emit('threat:progress', { stage: 'done', message: '完成', percent: 100 });
       return ok({
         threatScore: c.threat_score,
         threat_vs: c.threat_vs,
@@ -554,7 +559,7 @@
     },
     bm25Rank: () => ok([]),
     compareProductsMatrix: async () => {
-      emit('threat:progress', { stage: 'start', message: '参数对比（Demo） · Param compare (Demo)', percent: 5 });
+      emit('threat:progress', { stage: 'start', message: '参数对比（Demo）', percent: 5 });
       await sleep(200);
       const matrix = buildParamMatrix();
       state.compareMatrix = matrix;
@@ -568,14 +573,14 @@
     getCompareMatrix: () => ok(state.compareMatrix),
 
     generateRoadmap: async () => {
-      emit('roadmap:progress', { stage: 'generate', message: '生成击败路径（Demo）… · Generating beat path (Demo)…' });
+      emit('roadmap:progress', { stage: 'generate', message: '生成击败路径（Demo）…' });
       await sleep(600);
       const doc = {
         id: uid('rm'),
         title: `击败路径 · ${activeProduct()?.name || '产品'}`,
-        goal: 'Demo 路线图 · Demo roadmap',
+        goal: 'Demo 路线图',
         horizon: '12m',
-        summary: '这是 Demo 示例击败路径，非真实 LLM · Demo roadmap sample, not a real LLM output.',
+        summary: '这是 Demo 生成的示例击败路径，非真实 LLM 输出。',
         phases: [
           { name: '0–3 月', focus: '补齐核心规格与渠道', items: ['完善 iOS 体验', '对标 ATS 能力'] },
           { name: '3–6 月', focus: '差异化', items: ['端上 OCR', '订阅定价实验'] },

@@ -24,13 +24,13 @@ class LLMService {
   _config() {
     const c = this.getConfig() || {};
     if (!c.baseUrl) {
-      throw new AppError(Codes.PRECONDITION, '请先配置 LLM Base URL · Configure LLM Base URL first');
+      throw new AppError(Codes.PRECONDITION, '请先配置 LLM Base URL');
     }
     if (!c.apiKey && !this._isLocal(c.baseUrl)) {
-      throw new AppError(Codes.PRECONDITION, '请先在设置中配置 LLM API Key · Set LLM API Key in Settings');
+      throw new AppError(Codes.PRECONDITION, '请先在设置中配置 LLM API Key');
     }
     if (!c.model) {
-      throw new AppError(Codes.PRECONDITION, '请先配置 LLM Model · Configure LLM Model first');
+      throw new AppError(Codes.PRECONDITION, '请先配置 LLM Model');
     }
     const timeoutMs = this._clampTimeout(c.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     return {
@@ -131,7 +131,7 @@ class LLMService {
     const content = data.choices?.[0]?.message?.content;
     if (content == null) {
       this.stats.failures += 1;
-      throw new AppError(Codes.LLM, 'LLM 返回空内容 · LLM returned empty content');
+      throw new AppError(Codes.LLM, 'LLM 返回空内容');
     }
     this.stats.lastError = null;
     return content;
@@ -191,7 +191,7 @@ class LLMService {
           /* fallthrough */
         }
       }
-      throw new AppError(Codes.LLM, '无法解析 LLM JSON 响应 · Cannot parse LLM JSON response', { preview: text.slice(0, 200) });
+      throw new AppError(Codes.LLM, '无法解析 LLM JSON 响应', { preview: text.slice(0, 200) });
     }
   }
 

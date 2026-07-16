@@ -39,7 +39,7 @@ class SearchAgent {
     const products = this._products();
     const product = this._product();
     if (!product?.name && !products.length) {
-      throw new Error('请先在「我的产品」中配置至少一个产品 · Configure at least one product in My Products');
+      throw new Error('请先在「我的产品」中配置至少一个产品');
     }
     const scanProducts = products.length ? products : [product];
 
@@ -73,18 +73,18 @@ class SearchAgent {
     try {
       logProgress({
         stage: 'start',
-        message: `开始扫描 · Start scan (${trigger === 'loop' ? '后台 Loop · BG' : '手动 · Manual'}) · baseline: ${product?.name || '未命名 · Untitled'}`,
+        message: `开始扫描（${trigger === 'loop' ? '后台 Loop' : '手动'}）· 基准：${product?.name || '未命名'}`,
         percent: 5,
         forceSave: true,
       });
       logProgress({
         stage: 'discover',
-        message: `正在调用 LLM 研究竞品 · LLM research (target ${options.limit || 8}, may take 30–180s)…`,
+        message: `正在调用 LLM 研究竞品（目标 ${options.limit || 8} 个，可能需 30–180s）…`,
         percent: 8,
       });
       logProgress({
         stage: 'discover',
-        message: `研究查询 · Query: ${String(query || '').slice(0, 120)}${String(query || '').length > 120 ? '…' : ''}`,
+        message: `研究查询：${String(query || '').slice(0, 120)}${String(query || '').length > 120 ? '…' : ''}`,
         percent: 12,
       });
 
@@ -96,7 +96,7 @@ class SearchAgent {
 
       logProgress({
         stage: 'discover-done',
-        message: `发现 Found ${found} candidates: ${foundNames.slice(0, 8).join('、')}${foundNames.length > 8 ? '…' : ''}`,
+        message: `发现 ${found} 个候选：${foundNames.slice(0, 8).join('、')}${foundNames.length > 8 ? '…' : ''}`,
         percent: 30,
         forceSave: true,
       });
@@ -109,7 +109,7 @@ class SearchAgent {
       if (!candidates.length) {
         logProgress({
           stage: 'enrich',
-          message: '本轮无候选可补全 · No candidates to enrich — skip Enrich',
+          message: '本轮无候选可补全，跳过 Enrich',
           percent: 55,
         });
       }
@@ -118,7 +118,7 @@ class SearchAgent {
         const c = candidates[i];
         logProgress({
           stage: 'enrich',
-          message: `补全情报 · Enrich (${i + 1}/${candidates.length}): ${c.name}`,
+          message: `补全情报 (${i + 1}/${candidates.length}): ${c.name}`,
           percent: 30 + Math.floor((i / Math.max(candidates.length, 1)) * 25),
         });
 
@@ -127,13 +127,13 @@ class SearchAgent {
           enriched = await this._enrich(product, c);
           logProgress({
             stage: 'enrich',
-            message: `已补全 · Enriched (${i + 1}/${candidates.length}): ${c.name}${enriched.price != null ? ` · 标价 price ${enriched.price}` : ''}${(enriched.channels || []).length ? ` · 渠道 channels ${(enriched.channels || []).length}` : ''}`,
+            message: `已补全 (${i + 1}/${candidates.length}): ${c.name}${enriched.price != null ? ` · 标价 ${enriched.price}` : ''}${(enriched.channels || []).length ? ` · 渠道 ${(enriched.channels || []).length}` : ''}`,
             percent: 30 + Math.floor(((i + 1) / Math.max(candidates.length, 1)) * 25),
           });
         } catch {
           logProgress({
             stage: 'enrich-warn',
-            message: `补全失败 · Enrich failed, keep draft: ${c.name}`,
+            message: `补全失败，保留初稿: ${c.name}`,
           });
         }
         enrichedList.push(enriched);
@@ -142,7 +142,7 @@ class SearchAgent {
       if (enrichedList.length) {
         logProgress({
           stage: 'rag',
-          message: `开始威胁判定 · Threat scoring: ${enrichedList.length} candidates (BM25 + RAG)`,
+          message: `开始威胁判定：共 ${enrichedList.length} 个候选（BM25 召回 + RAG）`,
           percent: 55,
         });
       }
@@ -162,7 +162,7 @@ class SearchAgent {
         const enriched = enrichedList[i];
         logProgress({
           stage: 'rag',
-          message: `威胁判定 · Threat (${i + 1}/${enrichedList.length}): ${enriched.name}`,
+          message: `威胁判定 (${i + 1}/${enrichedList.length}): ${enriched.name}`,
           percent: 55 + Math.floor((i / Math.max(enrichedList.length, 1)) * 30),
         });
 
@@ -220,7 +220,7 @@ class SearchAgent {
         }
         logProgress({
           stage: 'scored',
-          message: `${row.name} 威胁 threat ${Math.round((scored.threatScore || 0) * 100)}%${isNew ? ' · 新增 new' : ' · 更新 updated'}`,
+          message: `${row.name} 威胁 ${Math.round((scored.threatScore || 0) * 100)}%${isNew ? ' · 新增' : ' · 更新'}`,
         });
         if (scored.threatScore >= (options.threatThreshold ?? this.store.get('loop.threatThreshold') ?? 0.65)) {
           if (isNew || (existing && existing.threat_score < scored.threatScore - 0.1)) {
@@ -235,7 +235,7 @@ class SearchAgent {
         saved.push(row);
       }
 
-      logProgress({ stage: 'verify', message: 'Agent 正在交叉校验候选质量… · Agent cross-checking candidates…', percent: 88 });
+      logProgress({ stage: 'verify', message: 'Agent 正在交叉校验候选质量…', percent: 88 });
       const topPending = saved
         .filter((s) => s.status === 'pending')
         .sort((a, b) => b.threat_score - a.threat_score)
@@ -251,7 +251,7 @@ class SearchAgent {
 
       logProgress({
         stage: 'done',
-        message: `扫描完成 · Scan done: found ${found}, new ${newCount}, high threat ${newThreats.length}`,
+        message: `扫描完成：发现 ${found}，新增 ${newCount}，高威胁 ${newThreats.length}`,
         percent: 100,
         forceSave: true,
       });
@@ -436,7 +436,7 @@ class SearchAgent {
     const product = this._product();
     onProgress({
       stage: 'agent-verify',
-      message: `Agent 确认中 · Verifying: ${competitor.name}`,
+      message: `Agent 确认中: ${competitor.name}`,
     });
 
     const data = await this.llm.research(

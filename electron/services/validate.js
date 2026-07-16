@@ -2,23 +2,23 @@ const { AppError, Codes } = require('./errors');
 
 function requireString(value, field, { min = 1, max = 200 } = {}) {
   const s = value == null ? '' : String(value).trim();
-  if (s.length < min) throw new AppError(Codes.VALIDATION, `${field} 不能为空 · required`);
-  if (s.length > max) throw new AppError(Codes.VALIDATION, `${field} 过长 · too long (max ${max})`);
+  if (s.length < min) throw new AppError(Codes.VALIDATION, `${field} 不能为空`);
+  if (s.length > max) throw new AppError(Codes.VALIDATION, `${field} 过长（最多 ${max} 字）`);
   return s;
 }
 
 function optionalString(value, field, { max = 2000 } = {}) {
   if (value == null || value === '') return '';
   const s = String(value).trim();
-  if (s.length > max) throw new AppError(Codes.VALIDATION, `${field} 过长 · too long`);
+  if (s.length > max) throw new AppError(Codes.VALIDATION, `${field} 过长`);
   return s;
 }
 
 function optionalNumber(value, field) {
   if (value == null || value === '') return null;
   const n = Number(value);
-  if (!Number.isFinite(n)) throw new AppError(Codes.VALIDATION, `${field} 必须是数字 · must be a number`);
-  if (n < 0) throw new AppError(Codes.VALIDATION, `${field} 不能为负 · cannot be negative`);
+  if (!Number.isFinite(n)) throw new AppError(Codes.VALIDATION, `${field} 必须是数字`);
+  if (n < 0) throw new AppError(Codes.VALIDATION, `${field} 不能为负`);
   return n;
 }
 
@@ -28,11 +28,11 @@ function optionalObject(value, field) {
     try {
       value = JSON.parse(value);
     } catch {
-      throw new AppError(Codes.VALIDATION, `${field} 不是合法 JSON · invalid JSON`);
+      throw new AppError(Codes.VALIDATION, `${field} 不是合法 JSON`);
     }
   }
   if (typeof value !== 'object' || Array.isArray(value)) {
-    throw new AppError(Codes.VALIDATION, `${field} 必须是对象 · must be an object`);
+    throw new AppError(Codes.VALIDATION, `${field} 必须是对象`);
   }
   return value;
 }
@@ -79,7 +79,7 @@ function validateCompetitor(input, { partial = false } = {}) {
   if (input.website != null) {
     const w = optionalString(input.website, '官网', { max: 500 });
     if (w && !/^https?:\/\//i.test(w)) {
-      throw new AppError(Codes.VALIDATION, '官网需以 http(s):// 开头 · Website must start with http(s)://');
+      throw new AppError(Codes.VALIDATION, '官网需以 http(s):// 开头');
     }
     out.website = w;
   }
@@ -87,7 +87,7 @@ function validateCompetitor(input, { partial = false } = {}) {
   if (input.notes != null) out.notes = optionalString(input.notes, '备注', { max: 4000 });
   if (input.status != null) {
     if (!['pending', 'confirmed', 'rejected'].includes(input.status)) {
-      throw new AppError(Codes.VALIDATION, '无效状态 · Invalid status');
+      throw new AppError(Codes.VALIDATION, '无效状态');
     }
     out.status = input.status;
   }
@@ -98,7 +98,7 @@ function validateCompetitor(input, { partial = false } = {}) {
 function validateLlm(input) {
   const baseUrl = requireString(input.baseUrl, 'Base URL', { max: 300 });
   if (!/^https?:\/\//i.test(baseUrl)) {
-    throw new AppError(Codes.VALIDATION, 'Base URL 需以 http(s):// 开头 · Base URL must start with http(s)://');
+    throw new AppError(Codes.VALIDATION, 'Base URL 需以 http(s):// 开头');
   }
   return {
     provider: optionalString(input.provider, 'Provider', { max: 40 }) || 'custom',
@@ -109,7 +109,7 @@ function validateLlm(input) {
       if (input.temperature == null || input.temperature === '') return 0.3;
       const t = Number(input.temperature);
       if (!Number.isFinite(t) || t < 0 || t > 2) {
-        throw new AppError(Codes.VALIDATION, 'Temperature 需在 0–2 之间 · Temperature must be 0–2');
+        throw new AppError(Codes.VALIDATION, 'Temperature 需在 0–2 之间');
       }
       return t;
     })(),
@@ -117,7 +117,7 @@ function validateLlm(input) {
       if (input.timeoutMs == null || input.timeoutMs === '') return 120000;
       const t = Number(input.timeoutMs);
       if (!Number.isFinite(t) || t < 15000 || t > 600000) {
-        throw new AppError(Codes.VALIDATION, '请求超时需在 15–600 秒之间 · Timeout must be 15–600 seconds');
+        throw new AppError(Codes.VALIDATION, '请求超时需在 15–600 秒之间');
       }
       return Math.round(t);
     })(),
