@@ -88,26 +88,25 @@ npm run test:e2e
 | Workflow | 触发 | 做什么 |
 |----------|------|--------|
 | **CI** (`.github/workflows/ci.yml`) | push / PR | 密钥护栏 + Ubuntu/macOS/Windows 上 `npm test` |
-| **Build & Release** (`.github/workflows/release.yml`) | tag `v*` 或手动 | 先测再打 macOS + Windows 包，tag 时发布 Release |
+| **Build & Release** | push **main** / tag `v*` / 手动 | 测试 → 打 macOS+Windows 包 → 发布 |
 
-发布示例：
+### 自动编译 / 下载
+
+| 触发 | 结果 |
+|------|------|
+| 推送到 `main` | 自动打包，更新 Pre-release **[Latest build](https://github.com/wangyaominde/competitor-intel/releases/tag/latest)** |
+| `git tag v1.x.x && git push --tags` | 正式 **Release**（带版本号） |
+| Actions 手动 Run | 同上（按当前分支/tag） |
 
 ```bash
+# 正式发版
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Actions → **Build & Release** 产物也可从 Artifact 下载（未打 tag 时手动 `workflow_dispatch`）。
+安装包在 [Releases](https://github.com/wangyaominde/competitor-intel/releases)；Actions Artifact 保留 30 天。
 
-### CI 自测流程说明
-
-1. **Secrets guard**：确认未跟踪 `.data/`、配置 JSON；跑 `check-secrets.js`  
-2. **矩阵测试**：三系统 `npm ci` → `npm test`  
-3. **构建前测试**：Release workflow 在打包前再跑一遍测试  
-4. **平台构建**：`macos-latest` → dmg/zip；`windows-latest` → nsis/portable  
-5. **Release**（仅 tag）：上传安装包到 GitHub Releases  
-
-公开仓库默认 **未代码签名**（`CSC_IDENTITY_AUTO_DISCOVERY=false`）。若需公证/签名，自行配置 Apple/Windows 证书 Secrets。
+公开仓库默认 **未代码签名**。macOS 若提示无法打开：系统设置 → 隐私与安全性 → 仍要打开。
 
 ## 首次使用
 

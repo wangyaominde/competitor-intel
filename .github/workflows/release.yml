@@ -1,23 +1,20 @@
-# 构建 macOS / Windows 安装包
-# - tag v* 或手动触发时打包并上传 Artifact / Release
+# 自动编译 macOS / Windows
+# - push main  → 测试 + 打包 + 更新 GitHub Pre-release「latest」
+# - push tag v* → 测试 + 打包 + 正式 Release
+# - 手动触发  → 同上（按当前 ref）
 name: Build & Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main, master]
+    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      upload_release:
-        description: 'Upload GitHub Release assets (needs tag or creates draft from run id)'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -50,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build macOS (dmg + zip, x64 + arm64)
+      - name: Build macOS (dmg + zip)
         run: npm run dist:mac
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -65,6 +62,7 @@ jobs:
             dist/*.zip
             dist/latest-mac.yml
           if-no-files-found: error
+          retention-days: 30
 
   build-win:
     name: Build Windows
@@ -94,11 +92,11 @@ jobs:
             dist/*.exe
             dist/latest.yml
           if-no-files-found: error
+          retention-days: 30
 
   release:
     name: Publish GitHub Release
     needs: [build-mac, build-win]
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Download mac artifacts
@@ -113,12 +111,40 @@ jobs:
           name: windows-build
           path: release-assets
 
-      - name: Create / update Release
+      - name: List assets
+        run: ls -lah release-assets
+
+      # 正式版：git tag v1.2.3 并 push tag
+      - name: Create versioned Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: release-assets/*
           generate_release_notes: true
           draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 主干持续构建：覆盖更新 Pre-release「latest」，方便下载
+      - name: Update continuous pre-release (latest)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build (main)
+          body: |
+            自动构建自 `main`（${{ github.sha }}）。
+
+            - 每次推送到 main 会**覆盖更新**此 Pre-release
+            - 正式版本请打 tag：`git tag v1.0.0 && git push origin v1.0.0`
+            - macOS：`.dmg` / `.zip`（未公证，需在系统设置里允许）
+            - Windows：安装包 / portable `.exe`
+          files: release-assets/*
+          draft: false
+          prerelease: true
+          make_latest: false
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
