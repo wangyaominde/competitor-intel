@@ -43,3 +43,8 @@ coverage/
 tmp/
 temp/
 .ci-artifacts/
+
+# icon intermediates
+build/icon.iconset/
+build/icon-*.png
+!build/icon.png

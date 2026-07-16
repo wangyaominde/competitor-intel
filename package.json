@@ -22,7 +22,8 @@
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
-    "dist:all": "electron-builder --mac --win"
+    "dist:all": "electron-builder --mac --win",
+    "icon": "python3 scripts/generate-icon.py"
   },
   "dependencies": {
     "adm-zip": "^0.6.0",
@@ -46,6 +47,7 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "icon": "build/icon.png",
     "files": [
       "electron/**/*",
       "src/**/*",

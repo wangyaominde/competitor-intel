@@ -105,6 +105,10 @@ body {
   font-weight: 800; font-size: 12px;
   background: linear-gradient(135deg, #5b8cff, #a78bfa);
   box-shadow: 0 6px 18px rgba(91,140,255,0.3);
+  background-image: url("/competitor-scout/icon-192.png");
+  background-size: cover;
+  background-position: center;
+  color: transparent;
 }
 .brand strong { display: block; font-size: 13px; }
 .brand span { font-size: 10px; color: var(--dim); }
