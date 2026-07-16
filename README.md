@@ -2,7 +2,8 @@
 
 单机桌面应用：LLM 研究扫描 + BM25/RAG 威胁判定 + **逐产品对比表**（分析用，不入判定）+ 竞品库与击败路径。
 
-**展示站（GitHub Pages）→ [https://wangyaominde.github.io/competitor-intel/](https://wangyaominde.github.io/competitor-intel/)**
+**在线 Demo（GitHub Pages）→ [https://wangyaominde.github.io/competitor-intel/](https://wangyaominde.github.io/competitor-intel/)**  
+浏览器里可点的产品壳：扫描动画 / 竞品库 / **参数对比表** / 威胁空间示意（示例数据，非真实 LLM）。
 
 [![CI](https://github.com/wangyaominde/competitor-intel/actions/workflows/ci.yml/badge.svg)](https://github.com/wangyaominde/competitor-intel/actions/workflows/ci.yml)
 [![Build](https://github.com/wangyaominde/competitor-intel/actions/workflows/release.yml/badge.svg)](https://github.com/wangyaominde/competitor-intel/actions/workflows/release.yml)
@@ -22,12 +23,12 @@
 | Loop | cron 定时扫描与通知 |
 | 数据 | 导出 / 备份 / 恢复（仅本地） |
 
-## 产品页
+## 在线 Demo
 
-静态展示站源码在 [`docs/`](./docs/)，由 Actions 部署到 GitHub Pages：
+可交互 Demo 在 [`docs/`](./docs/)（仿桌面端 UI，非营销介绍页）：
 
-- 站点：https://wangyaominde.github.io/competitor-intel/
-- 工作流：`.github/workflows/pages.yml`（push `docs/**` 或手动触发）
+- 地址：https://wangyaominde.github.io/competitor-intel/
+- 部署：`.github/workflows/pages.yml`
 
 ## 快速开始
 
