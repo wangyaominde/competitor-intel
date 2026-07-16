@@ -2,151 +2,91 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="竞品情报 Competitor Scout — 可点击的产品 Demo：扫描流水线、竞品库、参数对比表" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="竞品情报 CompetitorScout — 与桌面版同壳的交互 Demo" />
   <meta name="theme-color" content="#0b0d13" />
   <title>Demo · 竞品情报</title>
-  <!-- 绝对路径：避免 /competitor-scout 无尾斜杠时 CSS/JS 解析到站点根目录 404 -->
   <base href="/competitor-scout/" />
-  <link rel="stylesheet" href="/competitor-scout/styles.css" />
+  <!-- 与桌面端同一套样式 -->
+  <link rel="stylesheet" href="/competitor-scout/styles/app.css" />
+  <link rel="stylesheet" href="/competitor-scout/styles/demo-overlay.css" />
   <link rel="icon" type="image/png" href="/competitor-scout/favicon.png" />
   <link rel="apple-touch-icon" href="/competitor-scout/icon-192.png" />
-  <style>
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: #1e2436; border: 1px solid rgba(255,255,255,0.12); color: #eef1f8;
-      padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0;
-      pointer-events: none; transition: 0.25s; z-index: 60; z-index: 100;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  </style>
 </head>
 <body>
-  <div class="stage">
-    <div class="demo-bar">
-      <div>
-        <strong>竞品情报 · 交互 Demo</strong>
-        <span> · 浏览器模拟界面，数据为示例</span>
-      </div>
-      <div class="tags">
-        <span class="tag">可点侧栏</span>
-        <span class="tag">可跑扫描动画</span>
-        <span class="tag">可出参数表</span>
-        <a href="https://github.com/wangyaominde/competitor-scout" target="_blank" rel="noopener">GitHub 源码 →</a>
-      </div>
+  <div class="demo-ribbon">
+    <div>
+      <span class="pill">DEMO</span>
+      <strong style="margin-left:8px">竞品情报</strong>
+      <span> · 浏览器模拟桌面端（示例数据，无真实 LLM）</span>
     </div>
+    <div>
+      <a href="https://github.com/wangyaominde/competitor-scout" target="_blank" rel="noopener">GitHub</a>
+      ·
+      <a href="https://github.com/wangyaominde/competitor-scout/releases/tag/latest" target="_blank" rel="noopener">下载 Release</a>
+    </div>
+  </div>
 
-    <div class="app" role="application" aria-label="竞品情报 Demo">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark" aria-label="CompetitorScout"></div>
-          <span>
-            <strong>竞品情报</strong>
-            <span>Demo</span>
-          </span>
+  <div id="app" class="demo-app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark has-icon" title="CompetitorScout"></div>
+        <div class="brand-text">
+          <strong>竞品情报</strong>
+          <span>Competitor Scout</span>
         </div>
-        <button class="nav-item active" data-page="dashboard"><span class="nav-ico">◈</span><span class="label">仪表盘</span></button>
-        <button class="nav-item" data-page="scan"><span class="nav-ico">⟳</span><span class="label">智能扫描</span></button>
-        <button class="nav-item" data-page="competitors"><span class="nav-ico">◎</span><span class="label">竞品库</span></button>
-        <button class="nav-item" data-page="compare"><span class="nav-ico">☰</span><span class="label">参数对比</span></button>
-        <button class="nav-item" data-page="space"><span class="nav-ico">✦</span><span class="label">威胁空间</span></button>
-        <div class="sidebar-foot">
+      </div>
+
+      <div class="ready-mini" title="Demo 已就绪">
+        <div class="ready-mini-top">
+          <span>就绪度</span>
+          <strong>100%</strong>
+        </div>
+        <div class="ready-track"><i style="width:100%"></i></div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button type="button" class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> 仪表盘</button>
+        <button type="button" class="nav-item" data-page="competitors"><span class="nav-icon">◎</span> 竞品库</button>
+        <button type="button" class="nav-item" data-page="scan"><span class="nav-icon">⟳</span> 智能扫描</button>
+        <button type="button" class="nav-item" data-page="compare"><span class="nav-icon">☰</span> 参数对比</button>
+        <button type="button" class="nav-item" data-page="product"><span class="nav-icon">◇</span> 我的产品</button>
+        <button type="button" class="nav-item" data-page="space"><span class="nav-icon">✦</span> 威胁空间</button>
+        <button type="button" class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> 设置</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="loop-pill" id="loop-pill">
           <span class="dot"></span>
-          <span class="txt">Demo · 非真实 LLM</span>
+          <span>Loop 未启动 · Demo</span>
         </div>
-      </aside>
+      </div>
+    </aside>
 
-      <main class="main">
-        <header class="topbar">
-          <div>
-            <h1 id="page-title">仪表盘</h1>
-            <p id="page-sub">威胁态势与待确认</p>
-          </div>
-          <div class="top-actions">
-            <button class="btn ghost" id="btn-goto-scan">去扫描</button>
-            <button class="btn primary" id="btn-goto-compare">参数对比</button>
-          </div>
-        </header>
-
-        <div class="content">
-          <!-- 仪表盘 -->
-          <section class="page active" id="page-dashboard">
-            <div class="stats">
-              <div class="stat"><div class="l">竞品总量</div><div class="v" id="stat-total">0</div><div class="h">示例库</div></div>
-              <div class="stat"><div class="l">偏高威胁</div><div class="v" id="stat-high" style="color:var(--danger)">0</div><div class="h">≥ 50%</div></div>
-              <div class="stat"><div class="l">平均威胁</div><div class="v" id="stat-avg">0%</div><div class="h">演示分</div></div>
-              <div class="stat"><div class="l">待确认</div><div class="v" id="stat-pending">0</div><div class="h">人工筛选</div></div>
-            </div>
-            <div class="card">
-              <h3>最具威胁（点卡片）</h3>
-              <div class="comp-grid" id="dash-list"></div>
-            </div>
-          </section>
-
-          <!-- 扫描 -->
-          <section class="page" id="page-scan">
-            <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                <h3 style="margin:0">流水线</h3>
-                <button class="btn primary" id="btn-scan">开始扫描</button>
-              </div>
-              <div class="pipe" id="pipe"></div>
-              <div class="progress"><i id="scan-progress"></i></div>
-              <div class="scan-msg" id="scan-msg">点「开始扫描」演示 Discover → Enrich → 威胁 → 校验</div>
-            </div>
-            <div class="grid2">
-              <div class="card">
-                <h3>运行日志</h3>
-                <div class="console" id="scan-console">
-                  <div class="line info">// 等待扫描…</div>
-                </div>
-              </div>
-              <div class="card">
-                <h3>说明</h3>
-                <p class="hint">
-                  这是<strong>界面 Demo</strong>：动画与日志是模拟的，不会请求你的 API Key，也不会改 GitHub 仓库数据。<br/><br/>
-                  真实 App 用 Electron 跑在本机，LLM 自配，数据在本地。
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- 竞品库 -->
-          <section class="page" id="page-competitors">
-            <div class="comp-grid" id="comp-grid"></div>
-          </section>
-
-          <!-- 参数对比 -->
-          <section class="page" id="page-compare">
-            <div id="compare-body"></div>
-          </section>
-
-          <!-- 空间 -->
-          <section class="page" id="page-space">
-            <div class="card" style="padding:0;overflow:hidden">
-              <div class="space">
-                <canvas id="space-canvas"></canvas>
-                <div class="space-hint">蓝钻 = 我方 TailorCV · 球 = 竞品（位置随威胁分）</div>
-              </div>
-            </div>
-            <p class="hint" style="margin-top:8px">完整 3D 交互在桌面客户端（Three.js）。此处为轻量 2D 示意。</p>
-          </section>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="page-title">仪表盘</h1>
+          <p class="subtitle" id="page-sub">威胁态势与待确认竞品</p>
         </div>
-      </main>
-    </div>
-
-    <div class="footer-note">
-      wangyaominde/competitor-scout · MIT ·
-      <a href="https://github.com/wangyaominde/competitor-scout" style="color:var(--primary)">源码</a>
-    </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn ghost" title="通知">🔔</button>
+          <button type="button" class="btn" id="btn-export-demo">导出</button>
+          <button type="button" class="btn primary" id="btn-quick-scan">立即扫描</button>
+        </div>
+      </header>
+      <div class="content" id="content"></div>
+    </main>
   </div>
 
-  <div class="drawer" id="drawer">
-    <div class="drawer-card" id="drawer-body"></div>
+  <div id="toasts" class="toasts"></div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card" id="modal-card"></div>
   </div>
-  <div id="toast"></div>
 
   <script src="/competitor-scout/data.js"></script>
-  <script src="/competitor-scout/demo.js"></script>
+  <script src="/competitor-scout/js/demo-app.js"></script>
 </body>
 </html>
