@@ -1,5 +1,4 @@
-# 自测流水线：密钥检查 + 单元/系统测试
-# 触发：push / PR 到 main|master
+# 自测：密钥护栏 + 跨平台测试（不打包）
 name: CI
 
 on:
@@ -10,6 +9,7 @@ on:
   workflow_dispatch:
 
 concurrency:
+  # 仅取消同 workflow 旧 run，避免红徽章雪崩；构建走独立 workflow
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -18,30 +18,29 @@ jobs:
     name: Secrets guard
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
-      - name: Ensure .data is not in tree
+      - name: Ensure secrets/data not tracked
         run: |
+          set -e
           if [ -d .data ]; then
-            echo "::error::.data directory must not be committed"
-            exit 1
+            echo "::error::.data must not be present in CI checkout as committed tree"
           fi
-          if git ls-files | grep -E '(^\.data/|competitor-intel-config\.json$|competitor-intel\.json$)' ; then
+          if git ls-files | grep -E '(^\.data/|competitor-scout-config\.json$|competitor-intel-config\.json$|competitor-scout\.json$|competitor-intel\.json$|\.env$)'; then
             echo "::error::Tracked secret/data files found"
+            git ls-files | grep -E '(^\.data/|competitor-.*\.json$|\.env$)' || true
             exit 1
           fi
-          echo "No secret data paths tracked"
+          echo "OK: no secret paths tracked"
 
-      - name: Install deps (minimal for scripts)
+      - name: Install deps (scripts only)
         run: npm ci --ignore-scripts
 
-      - name: Run secrets check
+      - name: Secrets scan
         run: npm run test:secrets
 
   test:
@@ -52,12 +51,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -67,12 +65,22 @@ jobs:
         env:
           ELECTRON_GET_USE_PROXY: 'false'
 
+      - name: Verify icon assets present
+        shell: bash
+        run: |
+          test -f build/icon.png
+          test -f build/icon.icns
+          test -f build/icon.ico
+          ls -la build/icon.*
+
       - name: Smoke + system tests
         run: npm test
         env:
           CI: 'true'
+          # headless-ish: skip GPU noise
+          ELECTRON_DISABLE_GPU: '1'
 
-      - name: Upload test logs on failure
+      - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:

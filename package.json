@@ -18,11 +18,13 @@
     "test:system": "node scripts/system-test.js",
     "test:e2e": "node scripts/e2e-runtime.js",
     "test": "node scripts/check-secrets.js && node scripts/smoke-test.js && node scripts/system-test.js",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win",
-    "dist:all": "electron-builder --mac --win",
+    "pack": "electron-builder --dir --publish never",
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac dmg --x64 --arm64 --publish never",
+    "dist:mac:x64": "electron-builder --mac dmg --x64 --publish never -c.dmg.title=CompetitorScout-x64",
+    "dist:mac:arm64": "electron-builder --mac dmg --arm64 --publish never -c.dmg.title=CompetitorScout-arm64",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:all": "npm run dist:mac:x64 && npm run dist:mac:arm64 && npm run dist:win",
     "icon": "python3 scripts/generate-icon.py"
   },
   "dependencies": {
@@ -47,7 +49,6 @@
       "output": "dist",
       "buildResources": "build"
     },
-    "icon": "build/icon.png",
     "files": [
       "electron/**/*",
       "src/**/*",
@@ -64,6 +65,7 @@
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.business",
+      "icon": "build/icon.icns",
       "executableName": "CompetitorScout",
       "target": [
         {
@@ -80,6 +82,7 @@
       }
     },
     "win": {
+      "icon": "build/icon.ico",
       "executableName": "CompetitorScout",
       "target": [
         {
@@ -96,7 +99,8 @@
       "uninstallDisplayName": "CompetitorScout"
     },
     "dmg": {
-      "title": "CompetitorScout ${version}"
+      "title": "CompetitorScout",
+      "writeUpdateInfo": false
     },
     "publish": null
   }
