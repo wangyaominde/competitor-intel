@@ -1,41 +1,83 @@
-# 竞品情报 · Competitor Scout
+# 竞品情报
 
-单机桌面应用：LLM 研究扫描 + BM25/RAG 威胁判定 + **逐产品对比表**（分析用，不入判定）+ 竞品库与击败路径。
+**[中文](./README.md)** · [English](./README.en.md)
 
-Local desktop app: LLM research scan + BM25/RAG threat scoring + **param-by-param compare tables** (analysis only, not in scoring) + competitor library & beat roadmap.
+> 把「谁在跟我抢市场、哪里被压着、下一步怎么赢」变成桌面上能反复跑的工作流。
 
-**在线 Demo · Live Demo（GitHub Pages）→ [https://wangyaominde.github.io/competitor-scout/](https://wangyaominde.github.io/competitor-scout/)**  
-与桌面端**同一套 `app.js` + `app.css` + 3D**；`mock-api` 注入示例数据，**无需配置大模型**。  
-Same UI as the desktop app; `mock-api` injects sample data — **no real LLM required**.
+[![Demo](https://img.shields.io/badge/在线_Demo-立即体验-5b8cff?style=flat-square)](https://wangyaominde.github.io/competitor-scout/)
+[![Download](https://img.shields.io/badge/下载-macOS_/_Windows-111827?style=flat-square)](https://github.com/wangyaominde/competitor-scout/releases/tag/latest)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
 
-[![CI](https://github.com/wangyaominde/competitor-scout/actions/workflows/ci.yml/badge.svg)](https://github.com/wangyaominde/competitor-scout/actions/workflows/ci.yml)
-[![Build](https://github.com/wangyaominde/competitor-scout/actions/workflows/release.yml/badge.svg)](https://github.com/wangyaominde/competitor-scout/actions/workflows/release.yml)
-[![Pages](https://github.com/wangyaominde/competitor-scout/actions/workflows/pages.yml/badge.svg)](https://github.com/wangyaominde/competitor-scout/actions/workflows/pages.yml)
+---
 
-> **隐私 · Privacy**：本仓库**不包含** API Key 与竞品数据。本地运行时密钥与库存在本机用户数据目录；开发模式下在项目 `.data/`（已 gitignore）。  
-> This repo contains **no** API keys or competitor data. Secrets and libraries live in the OS user data dir (or `.data/` in dev, gitignored).
+## 这是什么
 
-## 功能 · Features
+竞品情报是一款**本地运行的桌面应用**。你描述自己的产品，它帮你：
 
-| 模块 · Module | 说明 · Description |
-|------|------|
-| 引导 / 就绪度 · Onboarding / Readiness | 首次配置清单，完成后自动隐藏 · First-run checklist; auto-hides when done |
-| 智能扫描 · Smart Scan | Discover → Enrich → 威胁 → Agent 校验（指示灯 + 心跳） · Discover → Enrich → Threat → Agent verify |
-| **参数对比表 · Param compare** | 规格/价格等**参数逐项**对齐；**不写入**威胁判定 · Spec/price rows aligned; **not** used in scoring |
-| 竞品库 · Competitors | 卡片 / 表格 / 3D 威胁空间 · Cards / table / 3D threat space |
-| 击败路径 · Beat Roadmap | AI 路线图 + 可视化 · AI roadmap + visualization |
-| Loop | cron 定时扫描与通知 · Scheduled scans & notifications |
-| 数据 · Data | 导出 / 备份 / 恢复（仅本地） · Export / backup / restore (local only) |
+1. **找**——自动搜索并整理可能的竞品  
+2. **判**——按威胁程度排序，而不是一份散乱的名单  
+3. **比**——规格、价格、渠道一条条对齐  
+4. **赢**——生成可执行的击败路径，并支持定时盯盘  
 
-## 在线 Demo · Live Demo
+密钥和竞品库都留在你自己的电脑上，**不会上传到本仓库，也不会塞进安装包**。
 
-可交互 Demo 在 [`docs/`](./docs/) · Interactive demo in [`docs/`](./docs/):
+---
 
-- 直接跑桌面端 `app.js` / `threat-viz.js` / `app.css` · Same desktop `app.js` / viz / CSS
-- `mock-api.js` 模拟 `window.api`（无真实 LLM、无本地文件） · Mocks `window.api` (no real LLM / files)
-- 地址 · URL：https://wangyaominde.github.io/competitor-scout/
+## 先试试
 
-## 快速开始 · Quick start
+| | |
+|---|---|
+| **两分钟上手** | [在线 Demo](https://wangyaominde.github.io/competitor-scout/)（示例数据，**不用填大模型、不用 API Key**） |
+| **完整能力** | [下载桌面版](https://github.com/wangyaominde/competitor-scout/releases/tag/latest)（接你自己的 LLM，真正扫描） |
+
+macOS 若提示「已损坏，无法打开」，多半是系统隔离，不是安装包坏了：
+
+```bash
+xattr -cr /Applications/CompetitorScout.app
+open /Applications/CompetitorScout.app
+```
+
+| 你的电脑 | 下这个 |
+|---------|--------|
+| Mac（Apple 芯片） | `CompetitorScout-*-mac-arm64.dmg` |
+| Mac（Intel） | `CompetitorScout-*-mac-x64.dmg` |
+| Windows | `CompetitorScout-*-win-x64.exe` |
+
+---
+
+## 你能用它做什么
+
+**把竞品从「感觉」变成「清单」**  
+扫一轮，待确认队列里会出现候选；你只把真正的对手入库，其余一键忽略。
+
+**先看谁最危险**  
+综合品类重合、功能规格、渠道与价格压力，给出威胁分与原因，并支持 3D 空间、卡片、表格多种视图。
+
+**做参数级对比，而不是口号式对比**  
+「我们有、对方没有 / 对方更强」落在具体规格行上。对比表用于分析，**不会反向改写威胁分**——判定与分析职责分开。
+
+**让 AI 帮你推演怎么赢**  
+基于你的产品和高威胁竞品，生成分阶段路线图：定位、价格与渠道策略、能力差距、本周可行动作。
+
+**设好之后可以少盯着**  
+开启 Loop，按你定的节奏后台巡检；高威胁出现时再通知你。
+
+---
+
+## 使用节奏（桌面版）
+
+1. 接一个 OpenAI 兼容的大模型（DeepSeek、通义、MiniMax、Kimi、Ollama…）  
+2. 在「我的产品」里写清楚你是谁、卖什么、卖多少  
+3. 跑一次智能扫描 → 在竞品库确认  
+4. 需要时打开参数对比、击败路径，或开启定时 Loop  
+
+在线 Demo **没有**大模型配置入口，避免误以为网页版也要填 Key——那是故意的。
+
+---
+
+## 从源码运行（可选）
+
+已有 Node.js 时：
 
 ```bash
 git clone https://github.com/wangyaominde/competitor-scout.git
@@ -44,111 +86,25 @@ npm install
 npm start
 ```
 
-开发模式（DevTools）· Dev mode (with DevTools):
+国内若 Electron 下载失败，可先设置镜像再安装：
 
 ```bash
-npm run dev
-```
-
-国内网络若 Electron 下载失败 · If Electron download fails in China:
-
-```bash
-# macOS / Linux
-export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
-npm install
-
-# Windows PowerShell
-$env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
+export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/   # macOS / Linux
 npm install
 ```
 
-## 本地打包 · Package locally
+---
 
-```bash
-npm run dist:mac   # → dist/*.dmg *.zip
-npm run dist:win   # → dist/*.exe (Windows or matching runner)
-npm run dist       # current platform
-```
+## 隐私与信任
 
-安装后用户数据在系统目录（如 macOS `~/Library/Application Support/competitor-scout/`），**不会**写回安装包。  
-User data stays in the OS app-support dir and is **not** written back into the install package.
+- 仓库内**不含** API Key，也**不含**你的真实竞品库  
+- 桌面端数据写在系统用户目录（例如 macOS 的 Application Support）  
+- 欢迎审计代码；测试与构建流水线会拦常见密钥泄漏  
 
-## 自测 · Tests
+---
 
-```bash
-npm test
-# 等价于 · equivalent to:
-# npm run test:secrets  # 防泄漏 · no secrets / .data committed
-# npm run test:smoke    # 文件、IPC、核心逻辑 · files, IPC, core smoke
-# npm run test:system   # 校验、BM25、威胁、导出 · validation, BM25, threat, export
-```
+## 许可
 
-可选 GUI 端到端（本机有显示器时）· Optional GUI e2e (when a display is available):
+[MIT](./LICENSE) — 欢迎使用、改造与分享。
 
-```bash
-npm run test:e2e
-```
-
-## GitHub CI / CD
-
-| Workflow | 触发 · Trigger | 做什么 · What it does |
-|----------|------|--------|
-| **CI** (`.github/workflows/ci.yml`) | push / PR | 密钥护栏 + Ubuntu/macOS/Windows 上 `npm test` · secret guard + tests |
-| **Build & Release** | push **main** / tag `v*` / manual | 测试 → 打 macOS+Windows 包 → 发布 · test → package → release |
-
-### 自动编译 / 下载 · Auto-build / download
-
-| 触发 · Trigger | 结果 · Result |
-|------|------|
-| 推送到 `main` · Push to `main` | 自动打包并发布 **[Latest](https://github.com/wangyaominde/competitor-scout/releases/tag/latest)**（正式 Release） · Auto package & publish **Latest** |
-| `git tag v1.x.x && git push --tags` | 带版本号的 **Release** · Versioned **Release** |
-| Actions 手动 Run · Manual workflow | 同上 · Same as above |
-
-```bash
-# 正式发版 · Cut a versioned release
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-安装包在 [Releases](https://github.com/wangyaominde/competitor-scout/releases)；Actions Artifact 保留 30 天。  
-Installers: [Releases](https://github.com/wangyaominde/competitor-scout/releases); Actions artifacts kept 30 days.
-
-公开仓库默认 **未 Apple 公证 / 未代码签名**。安装包英文名：**CompetitorScout**。  
-Public builds are **not** Apple-notarized / code-signed by default. Package name: **CompetitorScout**.
-
-### macOS 提示「已损坏，无法打开」· “Damaged, can’t be opened”
-
-这是 **Gatekeeper 隔离**，不是安装包坏了。下载并拖到「应用程序」后在终端执行：  
-This is **Gatekeeper quarantine**, not a bad binary. After dragging to Applications:
-
-```bash
-xattr -cr /Applications/CompetitorScout.app
-open /Applications/CompetitorScout.app
-```
-
-发布物仅 **3 个包** · Release artifacts (**3 packages**):
-
-| 平台 · Platform | 文件 · File |
-|------|------|
-| Mac M 系列 · Apple Silicon | `CompetitorScout-*-mac-arm64.dmg` |
-| Mac Intel | `CompetitorScout-*-mac-x64.dmg` |
-| Windows | `CompetitorScout-*-win-x64.exe` |
-
-## 首次使用 · First use
-
-1. 配置 LLM（OpenAI 兼容：DeepSeek / 通义 / MiniMax / Kimi / Ollama…）· Configure LLM (OpenAI-compatible)  
-2. 填写「我的产品」· Fill in **My Products**  
-3. 智能扫描 → 竞品库确认 · Smart Scan → confirm in Competitors  
-4. 可选开启 Loop · Optionally enable Loop  
-
-**请勿**把 API Key 写进代码或提交 `.data/`。  
-**Do not** commit API keys or `.data/`.
-
-## 技术栈 · Tech stack
-
-- Electron 33 · 纯 JS 本地存储 · electron-store · node-cron · Three.js  
-- Electron 33 · pure-JS local storage · electron-store · node-cron · Three.js  
-
-## License
-
-MIT
+有想法或问题？欢迎开 [Issue](https://github.com/wangyaominde/competitor-scout/issues)。
