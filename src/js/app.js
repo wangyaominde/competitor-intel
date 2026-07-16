@@ -11,6 +11,9 @@
     scanLastProgressAt: 0,
     scanHeartbeatTimer: null,
     scanLastPulseAt: 0,
+    threatRunning: false,
+    threatLastPercent: 0,
+    compareMatrix: null,
     readiness: null,
     bootstrap: null,
     onboardingStep: 0,
@@ -400,6 +403,45 @@
     if (mini) mini.classList.toggle('hidden', complete);
   }
 
+  /** 遍历匹配进度条（竞品库 / 仪表盘 / 详情） */
+  function showThreatProgress(show, message, percent) {
+    let bar = $('#threat-progress-bar');
+    // 若不在竞品页，用 toast 即可；进度仍写 state
+    if (percent != null) state.threatLastPercent = percent;
+    if (!bar && show) {
+      // 挂到 content 顶部
+      const content = $('#content');
+      if (content) {
+        bar = document.createElement('div');
+        bar.id = 'threat-progress-bar';
+        bar.className = 'threat-progress';
+        bar.innerHTML = `
+          <div class="threat-progress-top">
+            <span id="threat-progress-text">待命</span>
+            <strong id="threat-progress-pct">0%</strong>
+          </div>
+          <div class="progress"><i id="threat-progress-fill"></i></div>`;
+        content.insertBefore(bar, content.firstChild);
+      }
+    }
+    bar = $('#threat-progress-bar');
+    if (!bar) return;
+    if (!show) {
+      bar.classList.add('hidden');
+      return;
+    }
+    bar.classList.remove('hidden');
+    const text = $('#threat-progress-text');
+    const pctEl = $('#threat-progress-pct');
+    const fill = $('#threat-progress-fill');
+    if (message && text) text.textContent = message;
+    if (percent != null) {
+      const n = Math.max(0, Math.min(100, Math.round(percent)));
+      if (pctEl) pctEl.textContent = `${n}%`;
+      if (fill) fill.style.width = `${n}%`;
+    }
+  }
+
   async function refreshLoopPill() {
     try {
       const st = await call(api.getLoopStatus());
@@ -622,7 +664,7 @@
 
       <div class="grid two section-gap">
         <div class="card">
-          <h3>最具威胁 <button class="btn sm" id="btn-reanalyze">BM25+RAG 全库重算</button></h3>
+          <h3>最具威胁 <button class="btn sm" id="btn-reanalyze" title="按判定规则重算威胁分">全库重算判定</button></h3>
           ${topRows}
         </div>
         <div class="card">
@@ -672,13 +714,23 @@
     });
     $('#dash-to-scan')?.addEventListener('click', () => navigate('scan'));
     $('#btn-reanalyze')?.addEventListener('click', async () => {
+      if (state.threatRunning) {
+        toast('任务进行中…', 'info');
+        return;
+      }
+      state.threatRunning = true;
+      showThreatProgress(true, '全库重算判定…', 0);
       try {
-        toast('BM25 召回 + RAG 全库重算中…', 'info');
-        await call(api.analyzeAllThreats());
-        toast('自动威胁判定已更新', 'success');
+        toast('按判定规则重算威胁分…', 'info');
+        const res = await call(api.analyzeAllThreats());
+        toast(`判定已更新：${res?.competitorCount ?? 0} 个竞品`, 'success');
+        showThreatProgress(true, '完成', 100);
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
+      } finally {
+        state.threatRunning = false;
+        setTimeout(() => showThreatProgress(false), 2500);
       }
     });
     $$('[data-history-id]').forEach((el) => {
@@ -796,6 +848,14 @@
     const list = await call(api.listCompetitors({}));
     state.compAll = list;
     state.compCache = list;
+    // 加载已缓存的对比表（不触碰判定）
+    try {
+      if (!state.compareMatrix) {
+        state.compareMatrix = await call(api.getCompareMatrix());
+      }
+    } catch {
+      /* ignore */
+    }
     if (!list.length) {
       return `
         <div class="card">
@@ -809,8 +869,18 @@
     const view = state.compView || 'space';
     return `
       <div class="banner">
-        <span>自动：BM25+RAG 威胁 · 空间图直观看位置 · 人工用筛选复核</span>
-        <button class="btn sm" id="btn-rag-rerank">全库重算</button>
+        <span>判定：BM25+RAG · <strong>对比表</strong>：规格<strong>参数逐项</strong>对齐（不改判定）</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm primary" id="btn-compare-matrix" title="按规格参数一条一条对比，不写回威胁判定">参数对比表</button>
+          <button class="btn sm" id="btn-rag-rerank" title="按判定规则重算威胁分">全库重算判定</button>
+        </div>
+      </div>
+      <div id="threat-progress-bar" class="threat-progress hidden">
+        <div class="threat-progress-top">
+          <span id="threat-progress-text">待命</span>
+          <strong id="threat-progress-pct">0%</strong>
+        </div>
+        <div class="progress"><i id="threat-progress-fill"></i></div>
       </div>
       <div class="toolbar">
         <input class="search" id="comp-search" type="text" placeholder="搜索名称 / 公司 / 描述…" />
@@ -836,6 +906,7 @@
           <button type="button" data-view="space" class="${view === 'space' ? 'active' : ''}">空间图</button>
           <button type="button" data-view="cards" class="${view === 'cards' ? 'active' : ''}">卡片</button>
           <button type="button" data-view="table" class="${view === 'table' ? 'active' : ''}">高维表</button>
+          <button type="button" data-view="compare" class="${view === 'compare' ? 'active' : ''}">参数对比</button>
         </div>
         <div class="spacer"></div>
         <button class="btn" id="btn-export-csv">导出</button>
@@ -884,6 +955,9 @@
     if (view === 'cards') {
       return `<div class="comp-grid" id="comp-cards">${list.map((c) => compCard(c)).join('') || '<p class="muted empty-hint">无匹配</p>'}</div>`;
     }
+    if (view === 'compare') {
+      return renderCompareMatrixHtml(state.compareMatrix);
+    }
     // high-dim table
     return `
       <div class="dim-table-wrap">
@@ -910,6 +984,106 @@
         </table>
       </div>
       <p class="muted" style="font-size:12px;margin-top:8px">高维（≥4）用表呈现各维度分值；1–3 维请用「空间图」。</p>`;
+  }
+
+  /** 参数级对比表：规格/价格/品类/渠道 一条一条遍历（非判定标准） */
+  function renderCompareMatrixHtml(matrix) {
+    // 旧版威胁维度矩阵缓存 → 提示重生成
+    if (matrix && matrix.dimMeta && matrix.type !== 'param-compare') {
+      return `
+        <div class="card compare-empty">
+          <h3 style="margin-bottom:8px">参数对比表</h3>
+          <p class="muted" style="margin-bottom:14px">检测到旧版对比缓存，请重新生成<strong>参数级</strong>对比表。</p>
+          <button class="btn primary" id="btn-run-compare">生成参数对比表</button>
+        </div>`;
+    }
+
+    if (!matrix || !matrix.rows?.length) {
+      return `
+        <div class="card compare-empty">
+          <h3 style="margin-bottom:8px">参数对比表</h3>
+          <p class="muted" style="margin-bottom:14px;line-height:1.65">
+            对每个<strong>我方产品 × 竞品</strong>，把<strong>规格参数逐项</strong>对齐比较（含标价、品类、渠道）。
+            <br/>例如：平台、ATS、求职信… 一行一个参数，只做分析，
+            <strong>不写入威胁判定分</strong>。
+          </p>
+          <button class="btn primary" id="btn-run-compare">生成参数对比表</button>
+        </div>`;
+    }
+
+    const products = matrix.products || [];
+    const productOpts = [
+      `<option value="">全部我方产品</option>`,
+      ...products.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`),
+    ].join('');
+
+    const statusOpts = [
+      ['', '全部状态'],
+      ['diff', '不同 / 数值差'],
+      ['same', '相同'],
+      ['ours_only', '仅我方有'],
+      ['theirs_only', '仅竞品有'],
+    ]
+      .map(([v, l]) => `<option value="${v}">${l}</option>`)
+      .join('');
+
+    const body = matrix.rows
+      .map((r) => {
+        const st = r.status || '';
+        return `
+        <tr class="param-row status-${esc(st)}" data-open="${esc(r.competitorId)}" data-product="${esc(r.productId || '')}" data-status="${esc(st)}">
+          <td class="sticky-col">
+            <div class="item-title" title="${esc(r.productName)}">${esc(r.productName)}</div>
+          </td>
+          <td>
+            <div class="item-title" title="${esc(r.competitorName)}">${esc(r.competitorName)}</div>
+            <div class="item-sub">${esc(r.company || '')}</div>
+          </td>
+          <td>
+            <strong>${esc(r.param)}</strong>
+            ${r.paramAlt ? `<div class="item-sub">竞品键：${esc(r.paramAlt)}</div>` : ''}
+            ${r.group === 'base' ? '<span class="chip">基础</span>' : '<span class="chip purple">规格</span>'}
+          </td>
+          <td class="param-val" title="${esc(r.ourValue)}">${esc(r.ourValue || '—')}</td>
+          <td class="param-val" title="${esc(r.theirValue)}">${esc(r.theirValue || '—')}</td>
+          <td><span class="param-status st-${esc(st)}">${esc(r.statusLabel || st)}</span></td>
+        </tr>`;
+      })
+      .join('');
+
+    return `
+      <div class="card compare-toolbar">
+        <div>
+          <h3 style="margin:0 0 4px">参数对比 · ${matrix.productCount || products.length} 我方 × ${matrix.competitorCount || 0} 竞品</h3>
+          <p class="muted" style="font-size:12px;margin:0">
+            ${esc(fmtTime(matrix.updatedAt))} · 共 <strong>${matrix.paramRowCount || matrix.rows.length}</strong> 行参数 ·
+            <strong>不改威胁判定</strong>
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="compare-filter-product" style="min-width:140px">${productOpts}</select>
+          <select id="compare-filter-status" style="min-width:120px">${statusOpts}</select>
+          <button class="btn sm" id="btn-run-compare">重新生成</button>
+        </div>
+      </div>
+      <div class="dim-table-wrap compare-table-wrap">
+        <table class="table compare-table param-compare-table" id="compare-table">
+          <thead>
+            <tr>
+              <th class="sticky-col">我方产品</th>
+              <th>竞品</th>
+              <th>参数</th>
+              <th>我方值</th>
+              <th>竞品值</th>
+              <th>对比</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="muted" style="font-size:12px;margin-top:8px">
+        同名/近义参数名会自动对齐（如「ATS 关键词评分」与「ATS_优化」需人工看值）。点击行打开竞品详情。
+      </p>`;
   }
 
   function methodLabel(m) {
@@ -1112,16 +1286,76 @@
         toast(e.message, 'error');
       }
     });
-    $('#btn-rag-rerank')?.addEventListener('click', async () => {
+    const runCompareMatrix = async () => {
+      if (state.threatRunning) {
+        toast('任务进行中…', 'info');
+        return;
+      }
+      state.threatRunning = true;
+      showThreatProgress(true, '参数逐项对比中…', 0);
       try {
-        toast('BM25+RAG 全库重算中…', 'info');
-        await call(api.analyzeAllThreats());
-        toast('完成', 'success');
+        toast('正在按规格参数逐条对比…', 'info');
+        const matrix = await call(api.compareProductsMatrix());
+        state.compareMatrix = matrix;
+        state.compView = 'compare';
+        toast(
+          `参数对比完成：${matrix.paramRowCount || 0} 行（${matrix.productCount} 产品 × ${matrix.competitorCount} 竞品，未改判定）`,
+          'success'
+        );
+        showThreatProgress(true, '完成', 100);
         renderPage();
       } catch (e) {
         toast(e.message, 'error');
+        showThreatProgress(true, e.message || '失败', state.threatLastPercent || 0);
+      } finally {
+        state.threatRunning = false;
+        setTimeout(() => showThreatProgress(false), 2500);
       }
+    };
+
+    const applyCompareFilters = () => {
+      const pid = $('#compare-filter-product')?.value || '';
+      const st = $('#compare-filter-status')?.value || '';
+      $$('#compare-table tbody tr').forEach((tr) => {
+        const okP = !pid || tr.dataset.product === pid;
+        const okS =
+          !st ||
+          tr.dataset.status === st ||
+          (st === 'diff' &&
+            ['diff', 'ours_higher', 'theirs_higher'].includes(tr.dataset.status));
+        tr.style.display = okP && okS ? '' : 'none';
+      });
+    };
+    const runRerank = async () => {
+      if (state.threatRunning) {
+        toast('任务进行中…', 'info');
+        return;
+      }
+      state.threatRunning = true;
+      showThreatProgress(true, '全库重算判定…', 0);
+      try {
+        const res = await call(api.analyzeAllThreats());
+        toast(`判定已更新：${res?.competitorCount ?? 0} 个竞品`, 'success');
+        showThreatProgress(true, '完成', 100);
+        renderPage();
+      } catch (e) {
+        toast(e.message, 'error');
+      } finally {
+        state.threatRunning = false;
+        setTimeout(() => showThreatProgress(false), 2500);
+      }
+    };
+    $('#btn-rag-rerank')?.addEventListener('click', () => runRerank());
+    $('#btn-compare-matrix')?.addEventListener('click', () => {
+      state.compView = 'compare';
+      renderPage();
     });
+    $('#btn-run-compare')?.addEventListener('click', () => runCompareMatrix());
+    $('#compare-filter-product')?.addEventListener('change', applyCompareFilters);
+    $('#compare-filter-status')?.addEventListener('change', applyCompareFilters);
+    $$('#compare-table tbody tr[data-open]').forEach((el) =>
+      el.addEventListener('click', () => openCompetitor(el.dataset.open))
+    );
 
     const filterList = (source) => {
       const q = ($('#comp-search')?.value || '').trim().toLowerCase();
@@ -1380,13 +1614,22 @@
               : ''
           }
           ${
-            Array.isArray(c.threat_vs) && c.threat_vs.length > 1
-              ? `<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${c.threat_vs
-                  .map(
-                    (v) =>
-                      `<span class="chip ${v.productId === c.primary_product_id ? 'blue' : ''}">${esc(v.productName)} ${Math.round((v.score || 0) * 100)}%</span>`
-                  )
-                  .join('')}</div>`
+            Array.isArray(c.threat_vs) && c.threat_vs.length
+              ? `<div class="threat-vs-list" style="margin-top:12px">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">判定侧参考（取最高为威胁分）· 细致对比请用「对比表」</div>
+                  ${c.threat_vs
+                    .map(
+                      (v) => `
+                    <div class="threat-vs-row ${v.productId === c.primary_product_id ? 'is-primary' : ''}">
+                      <div class="threat-vs-name">${esc(v.productName || '—')}${
+                        v.productId === c.primary_product_id ? ' <span class="chip blue">判定最高</span>' : ''
+                      }</div>
+                      <div class="threat-vs-score">${Math.round((v.score || 0) * 100)}%</div>
+                      <div class="threat-vs-meta">${esc(methodLabel(v.method))}</div>
+                    </div>`
+                    )
+                    .join('')}
+                </div>`
               : ''
           }
         </div>
@@ -1407,7 +1650,7 @@
           <div class="row-actions">
             <button class="btn" data-close-modal>关闭</button>
             <button class="btn" id="c-verify">Agent 确认</button>
-            <button class="btn" id="c-rescore">BM25+RAG 重算</button>
+            <button class="btn" id="c-rescore" title="按判定规则重算威胁分">重算判定</button>
             ${c.status !== 'confirmed' ? '<button class="btn primary" id="c-confirm">人工确认入库</button>' : ''}
           </div>
         </div>`;
@@ -1448,12 +1691,24 @@
         }
       });
       $('#c-rescore')?.addEventListener('click', async () => {
+        if (state.threatRunning) {
+          toast('任务进行中…', 'info');
+          return;
+        }
+        state.threatRunning = true;
+        showThreatProgress(true, `重算判定「${c.name}」…`, 0);
         try {
-          await call(api.matchThreat(id));
-          toast('威胁已更新', 'success');
+          const result = await call(api.matchThreat(id));
+          toast(
+            `判定已更新 ${Math.round((result.threatScore || 0) * 100)}%（相对 ${result.primary_product_name || '—'}）`,
+            'success'
+          );
           openCompetitor(id);
         } catch (e) {
           toast(e.message, 'error');
+        } finally {
+          state.threatRunning = false;
+          setTimeout(() => showThreatProgress(false), 2000);
         }
       });
     } catch (e) {
@@ -1735,7 +1990,7 @@
             </select>
           </div>
           <div class="flex-between scan-form-actions">
-            <span class="muted" style="font-size:12px;line-height:1.4">指示灯 + 心跳日志会实时反馈进度，长请求不等于卡死</span>
+            <span class="muted" style="font-size:12px;line-height:1.4">判定用 BM25+RAG；逐产品细致对比请到竞品库「对比表」</span>
             <button class="btn primary" id="btn-run-scan" ${can ? '' : 'disabled'}>
               <span class="btn-label">开始扫描</span>
             </button>
@@ -1785,6 +2040,11 @@
       appendScanLog({ level: 'info', stage: 'start', message: '开始扫描任务' });
 
       try {
+        appendScanLog({
+          level: 'info',
+          stage: 'start',
+          message: '威胁判定：基准产品 RAG + 多产品取最高（对比表不在此生成）',
+        });
         const res = await call(
           api.runScan({
             query: $('#scan-query').value.trim() || undefined,
@@ -3266,6 +3526,29 @@
       }
     });
     $('#ob-next')?.addEventListener('click', () => onboardingNext());
+
+    api.on('threat:progress', (p) => {
+      if (!p) return;
+      if (p.percent != null) state.threatLastPercent = p.percent;
+      if (p.message) {
+        showThreatProgress(true, p.message, p.percent);
+        // 扫描页也写日志，便于与扫描流水线对照
+        if (state.page === 'scan' && p.stage !== 'product-match') {
+          appendScanLog({
+            level: p.stage === 'done' ? 'ok' : p.stage === 'error' ? 'err' : 'work',
+            stage: 'threat',
+            message: p.message,
+          });
+        }
+      } else if (p.percent != null) {
+        showThreatProgress(true, undefined, p.percent);
+      }
+      if (p.stage === 'done' || p.stage === 'error') {
+        setTimeout(() => {
+          if (!state.threatRunning) showThreatProgress(false);
+        }, 2200);
+      }
+    });
 
     api.on('scan:progress', (p) => {
       if (p?.stage) state.scanLastStage = p.stage;

@@ -69,13 +69,24 @@ class ThreatAnalyzer {
         ? [product]
         : [];
     const results = [];
+    const onProgress = options.onProgress || (() => {});
+    const total = list.length;
 
-    for (const c of list) {
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i];
+      onProgress({
+        stage: 'competitor',
+        competitorIndex: i + 1,
+        competitorTotal: total,
+        competitorName: c.name,
+        message: `重算威胁 (${i + 1}/${total}): ${c.name}`,
+        percent: total ? Math.round((i / total) * 100) : 0,
+      });
+      // 判定标准：多产品取最高威胁；RAG 默认只打在 active/指定产品上（非全量遍历）
       const scored = await this.scoreAgainstProducts(products, c, {
         ...options,
         corpus,
-        ragAll: options.ragAll === true,
-        ragProductIds: options.ragProductIds,
+        onProgress: undefined,
       });
       results.push({
         id: c.id,
@@ -89,8 +100,8 @@ class ThreatAnalyzer {
   }
 
   /**
-   * 对多个己方产品分别评分，取最高威胁作为自动判定结果
-   * @returns 综合分 + threat_vs 明细
+   * 对多个己方产品分别评分，取最高威胁作为**自动判定**结果。
+   * 注意：这是判定路径；细致的「逐产品对比表」请用 compareMatrix，不写回判定标准。
    */
   async scoreAgainstProducts(products, competitor, options = {}) {
     const list = (products || []).filter((p) => p && p.name);
@@ -107,6 +118,7 @@ class ThreatAnalyzer {
             productName: list[0].name,
             score: one.threatScore,
             reason: one.reason,
+            method: one.method,
           },
         ],
         primary_product_id: list[0].id || null,
@@ -114,7 +126,7 @@ class ThreatAnalyzer {
       };
     }
 
-    // 多产品：默认只对 active / 指定产品做 RAG，其余用规则，避免 N 次 LLM 卡死 UI
+    // 多产品判定：默认只对 active/指定产品做 RAG，其余用规则，再取最高
     const ragIds = options.ragProductIds
       ? new Set(options.ragProductIds)
       : options.ragAll
@@ -150,6 +162,100 @@ class ThreatAnalyzer {
       threat_vs: vs.map(({ _full, ...rest }) => rest),
       primary_product_id: best.productId,
       primary_product_name: best.productName,
+    };
+  }
+
+  /**
+   * 逐产品细致对比矩阵（独立于威胁判定标准，不写回 threat_score）
+   * 行=竞品，列=我方产品；单元格含综合分 + 各维度明细。
+   * @param {{ useRag?: boolean, onProgress?: Function }} options
+   */
+  async compareMatrix(products, competitors, options = {}) {
+    const productList = (products || []).filter((p) => p && p.name);
+    const compList = competitors || [];
+    const onProgress = options.onProgress || (() => {});
+    const useRag = options.useRag === true; // 默认规则+多维特征，细致且快；可选 RAG 增强说明
+    const corpus = options.corpus || compList;
+    const dimMeta = this.vector.getDimensionMeta();
+
+    const total = Math.max(productList.length * compList.length, 1);
+    let done = 0;
+    const rows = [];
+
+    for (let ci = 0; ci < compList.length; ci++) {
+      const c = compList[ci];
+      const cells = [];
+      for (let pi = 0; pi < productList.length; pi++) {
+        const p = productList[pi];
+        onProgress({
+          stage: 'compare-cell',
+          competitorIndex: ci + 1,
+          competitorTotal: compList.length,
+          productIndex: pi + 1,
+          productTotal: productList.length,
+          competitorName: c.name,
+          productName: p.name,
+          message: `对比 (${done + 1}/${total}): ${c.name} × ${p.name}`,
+          percent: Math.round((done / total) * 100),
+        });
+
+        const scored = await this.scoreOne(p, c, {
+          corpus,
+          useRag,
+          topK: options.topK ?? 5,
+        });
+
+        cells.push({
+          productId: p.id || null,
+          productName: p.name,
+          score: scored.threatScore ?? 0,
+          dimensions: scored.dimensions || {},
+          reason: scored.reason || '',
+          method: scored.method || (useRag ? 'rag_bm25' : 'rules'),
+          confidence: scored.confidence ?? null,
+          rule_score: scored.rule_score ?? null,
+          rag_score: scored.rag_score ?? null,
+        });
+        done += 1;
+      }
+
+      // 仅对比表内「相对最高」标记，不影响库内威胁判定
+      let bestIdx = 0;
+      for (let i = 1; i < cells.length; i++) {
+        if ((cells[i].score || 0) > (cells[bestIdx].score || 0)) bestIdx = i;
+      }
+      rows.push({
+        competitorId: c.id,
+        competitorName: c.name,
+        company: c.company || '',
+        status: c.status || '',
+        // 库内当前判定分（对照用，不在此更新）
+        libraryThreat: c.threat_score ?? null,
+        cells,
+        bestProductId: cells[bestIdx]?.productId || null,
+        bestProductName: cells[bestIdx]?.productName || null,
+        bestScore: cells[bestIdx]?.score ?? 0,
+      });
+    }
+
+    onProgress({
+      stage: 'done',
+      message: `对比完成：${compList.length} 竞品 × ${productList.length} 我方产品`,
+      percent: 100,
+    });
+
+    return {
+      updatedAt: new Date().toISOString(),
+      useRag,
+      dimMeta,
+      products: productList.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category || '',
+      })),
+      rows,
+      productCount: productList.length,
+      competitorCount: compList.length,
     };
   }
 

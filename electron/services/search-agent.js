@@ -176,10 +176,14 @@ class SearchAgent {
           channels: enriched.channels || [],
         };
 
+        // 扫描阶段的威胁判定：用判定规则（基准产品 RAG + 其余规则取最高），
+        // 细致「逐产品对比表」走独立入口，不在此写入判定标准。
+        const activeId = product?.id || scanProducts[0]?.id;
         const scored = await this.threat.scoreAgainstProducts(scanProducts, target, {
           corpus: draftCorpus,
           useRag: true,
           topK: 5,
+          ragProductIds: activeId ? [activeId] : undefined,
         });
 
         const row = this.db.upsertCompetitor({

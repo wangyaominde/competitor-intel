@@ -38,7 +38,7 @@
         <h1>把竞品情报做成<br /><span class="grad">可扫描、可匹配、可击败</span> 的工作台</h1>
         <p class="lead">
           Competitor Intel 是一款本地 Electron 应用：用你自己的大模型做研究扫描，
-          用 BM25 + RAG 自动算威胁，并按<strong>我方产品一条一条</strong>遍历匹配，
+          用 BM25 + RAG 自动算威胁，并用<strong>对比表</strong>按我方产品逐条细致比较（不混入判定），
           再给出击败路径与 3D 威胁空间。
         </p>
         <div class="hero-cta">
@@ -101,8 +101,8 @@
         </article>
         <article class="card">
           <div class="icon">02</div>
-          <h3>遍历匹配我方产品</h3>
-          <p>对每个竞品，按我方产品<strong>逐条</strong>做 BM25+RAG，输出 threat_vs 明细并取最高威胁。</p>
+          <h3>参数对比表</h3>
+          <p>按规格参数<strong>一条一条</strong>对齐（我方值 / 竞品值 / 相同·不同），表格分析，<strong>不写入</strong>威胁判定。</p>
         </article>
         <article class="card">
           <div class="icon">03</div>
@@ -146,8 +146,8 @@
           <span>证据 + 我方产品 + 目标竞品 → LLM 威胁分与理由</span>
         </li>
         <li>
-          <strong>逐产品遍历</strong>
-          <span>多产品时一条一条匹配，取最高并保留明细</span>
+          <strong>对比表（可选）</strong>
+          <span>按我方产品逐条细致比较，仅作分析，不改判定</span>
         </li>
         <li>
           <strong>人工筛选</strong>
@@ -201,7 +201,7 @@ npm start</code></pre>
           <ol class="plain">
             <li>配置 LLM（Base URL / Key / Model）</li>
             <li>添加一个或多个「我方产品」</li>
-            <li>智能扫描（可开遍历匹配）</li>
+            <li>智能扫描 → 竞品库「对比表」</li>
             <li>竞品库确认 · 查看 3D / 击败路径</li>
           </ol>
           <div class="hero-cta" style="margin-top:18px">

@@ -50,6 +50,7 @@ ok(fs.existsSync('node_modules/electron-store'), 'electron-store');
 ok(fs.existsSync('node_modules/uuid'), 'uuid');
 ok(fs.existsSync('.gitignore'), '.gitignore');
 ok(fs.readFileSync('.gitignore', 'utf8').includes('.data'), '.gitignore excludes .data');
+ok(fs.existsSync('electron/services/param-compare.js'), 'param-compare service');
 
 console.log('\n========== 2. IPC 契约 ==========');
 const pre = fs.readFileSync('electron/preload.js', 'utf8');

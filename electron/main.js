@@ -670,18 +670,30 @@ function registerIpc() {
   });
 
   // ---- Threat (BM25 + RAG 核心自动判定) ----
+  /** 全库重算判定分（不跑对比表；多产品仍按判定规则取最高） */
   handle('threat:analyze-all', async () => {
     const products = Products.list(store);
     if (!products.length) throw new AppError(Codes.PRECONDITION, '请先配置至少一个产品');
     const all = db.listCompetitors({});
-    if (!all.length) return [];
-    // 全库重算：对所有产品做完整 RAG（较慢，属显式操作）
+    if (!all.length) return { ranked: [], productCount: products.length, competitorCount: 0 };
+
+    const active = Products.getActive(store);
+    sendToRenderer('threat:progress', {
+      stage: 'start',
+      message: `全库重算威胁判定（${all.length} 竞品）`,
+      percent: 0,
+      productCount: products.length,
+      competitorCount: all.length,
+    });
+
     const ranked = await threatAnalyzer.rankAll(products[0], all, {
       useRag: true,
       topK: 5,
       products,
-      ragAll: true,
+      ragProductIds: active?.id ? [active.id] : products[0]?.id ? [products[0].id] : undefined,
+      onProgress: (p) => sendToRenderer('threat:progress', { ...p, source: 'analyze-all' }),
     });
+
     for (const item of ranked) {
       db.updateThreatScore(item.id, item.threatScore, item.dimensions, item.reason, {
         method: item.method,
@@ -695,19 +707,42 @@ function registerIpc() {
         primary_product_name: item.primary_product_name,
       });
     }
-    return ranked;
+
+    sendToRenderer('threat:progress', {
+      stage: 'done',
+      message: `判定已更新：${ranked.length} 个竞品`,
+      percent: 100,
+    });
+
+    return {
+      ranked,
+      productCount: products.length,
+      competitorCount: all.length,
+    };
   });
 
+  /** 单竞品重算判定（不跑对比表） */
   handle('threat:match', async (_e, competitorId) => {
     const products = Products.list(store);
-    const c = db.getCompetitor(competitorId);
+    const id = typeof competitorId === 'string' ? competitorId : competitorId?.id;
+    const c = db.getCompetitor(id || competitorId);
     if (!c) throw new AppError(Codes.NOT_FOUND, '未找到竞品');
     if (!products.length) throw new AppError(Codes.PRECONDITION, '请先配置产品');
     const corpus = db.listCompetitors({});
+    const active = Products.getActive(store);
+
+    sendToRenderer('threat:progress', {
+      stage: 'start',
+      message: `重算判定「${c.name}」`,
+      percent: 5,
+      competitorName: c.name,
+    });
+
     const result = await threatAnalyzer.scoreAgainstProducts(products, c, {
       corpus,
       useRag: true,
       topK: 5,
+      ragProductIds: active?.id ? [active.id] : products[0]?.id ? [products[0].id] : undefined,
     });
     db.updateThreatScore(c.id, result.threatScore, result.dimensions, result.reason, {
       method: result.method,
@@ -720,8 +755,52 @@ function registerIpc() {
       primary_product_id: result.primary_product_id,
       primary_product_name: result.primary_product_name,
     });
+
+    sendToRenderer('threat:progress', {
+      stage: 'done',
+      message: `「${c.name}」判定 ${Math.round((result.threatScore || 0) * 100)}%`,
+      percent: 100,
+    });
+
     return result;
   });
+
+  /**
+   * 参数级对比表：规格/价格/品类/渠道 一条一条遍历
+   * 独立分析，**不写回** threat_score / 判定标准
+   */
+  handle('threat:compare-matrix', async () => {
+    const products = Products.list(store);
+    if (!products.length) throw new AppError(Codes.PRECONDITION, '请先配置至少一个产品');
+    const all = db.listCompetitors({});
+    if (!all.length) throw new AppError(Codes.PRECONDITION, '竞品库为空，请先扫描或添加竞品');
+
+    const { buildParamCompareMatrix } = require('./services/param-compare');
+
+    sendToRenderer('threat:progress', {
+      stage: 'start',
+      message: `参数对比：${products.length} 我方产品 × ${all.length} 竞品（规格逐项）`,
+      percent: 0,
+      productCount: products.length,
+      competitorCount: all.length,
+    });
+
+    const matrix = buildParamCompareMatrix(products, all, {
+      onProgress: (p) => sendToRenderer('threat:progress', { ...p, source: 'param-compare' }),
+    });
+
+    store.set('productCompare', matrix);
+
+    sendToRenderer('threat:progress', {
+      stage: 'done',
+      message: `参数对比完成：${matrix.paramRowCount} 行（未改判定）`,
+      percent: 100,
+    });
+
+    return matrix;
+  });
+
+  handle('threat:compare-get', () => store.get('productCompare') || null);
 
   handle('threat:bm25-rank', (_e, topK) => {
     const product = Products.getActive(store);

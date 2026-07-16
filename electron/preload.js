@@ -86,10 +86,13 @@ contextBridge.exposeInMainWorld('api', {
   confirmBatch: (ids) => invoke('agent:confirm-batch', ids),
   verifyOne: (id) => invoke('agent:verify-one', id),
 
-  // Threat (BM25 + RAG)
+  // Threat (BM25 + RAG 判定)
   analyzeAllThreats: () => invoke('threat:analyze-all'),
   matchThreat: (id) => invoke('threat:match', id),
   bm25Rank: (topK) => invoke('threat:bm25-rank', topK),
+  /** 参数级对比表：规格逐项遍历（不写回判定标准） */
+  compareProductsMatrix: () => invoke('threat:compare-matrix'),
+  getCompareMatrix: () => invoke('threat:compare-get'),
 
   // Roadmap
   generateRoadmap: (options) => invoke('roadmap:generate', options),
@@ -120,6 +123,7 @@ contextBridge.exposeInMainWorld('api', {
   on: (channel, callback) => {
     const valid = [
       'scan:progress',
+      'threat:progress',
       'loop:scan-complete',
       'loop:error',
       'notification:push',

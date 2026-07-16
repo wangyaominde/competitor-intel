@@ -1,6 +1,6 @@
 # 竞品情报 · Competitor Intel
 
-单机桌面应用：LLM 研究扫描 + BM25/RAG 威胁分析 + **逐产品遍历匹配** + 竞品库与击败路径。
+单机桌面应用：LLM 研究扫描 + BM25/RAG 威胁判定 + **逐产品对比表**（分析用，不入判定）+ 竞品库与击败路径。
 
 **展示站（GitHub Pages）→ [https://wangyaominde.github.io/competitor-intel/](https://wangyaominde.github.io/competitor-intel/)**
 
@@ -16,7 +16,7 @@
 |------|------|
 | 引导 / 就绪度 | 首次配置清单，完成后自动隐藏 |
 | 智能扫描 | Discover → Enrich → 威胁 → Agent 校验（指示灯 + 心跳） |
-| **遍历匹配** | 按我方产品**一条一条** RAG 匹配竞品，输出明细并取最高威胁 |
+| **参数对比表** | 规格/价格等**参数逐项**对齐表格；**不写入**威胁判定 |
 | 竞品库 | 卡片 / 表格 / 3D 威胁空间 |
 | 击败路径 | AI 路线图 + 可视化 |
 | Loop | cron 定时扫描与通知 |
